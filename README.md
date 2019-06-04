@@ -9,7 +9,8 @@ For license information, see LICENSE -- use at your own risk.
 This is a custom component for the Vantage Infusion whole-home lighting
 system for use with Home Assistant.
 
-It relies on my pyvantage module (from PyPi or github).
+It relies on my pyvantage module (from PyPi at https://pypi.org/project/pyvantage/
+or github at https://github.com/gjbadros/pyvantage).
 
 Put these files in .homeassistant/custom_components/vantage
 
