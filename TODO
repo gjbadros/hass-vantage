@@ -1,0 +1,15 @@
+* DMX lights not reading RGB values right
+* DMX lights not setting to color_temp right
+* Fix capitalizations of hass-make-groups.pl
+
+
+* extra variables and tasks from vantage config
+
+* support set_variable (by name) service
+
+* support call_task, call_task_vid services; can I expose buttons for calling the tasks in the UI?
+
+* make circadiant work for the Ketra lights, too.
+
+* test DMX on the ketra lights via vantage directly instead of using driver; get DMX hub working
+
