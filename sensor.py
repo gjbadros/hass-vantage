@@ -23,14 +23,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for (area_name, device) in hass.data[VANTAGE_DEVICES]['sensor']:
         if not area_name:
             area_name = ""
-        dev = VantageVariable(area_name, device, hass.data[VANTAGE_CONTROLLER])
+        dev = VantageSensor(area_name, device, hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 
     add_devices(devs, True)
     return True
 
 
-class VantageVariable(VantageDevice, Entity):
+class VantageSensor(VantageDevice, Entity):
     """Representation of a Sensor."""
 
     def __init__(self, area_name, vantage_device, controller):
@@ -46,7 +46,7 @@ class VantageVariable(VantageDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return 'variable'
+        return self._vantage_device.type
 
     def update(self):
         """Fetch new state data for the sensor.

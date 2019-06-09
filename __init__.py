@@ -22,7 +22,10 @@ VANTAGE_CONTROLLER = 'vantage_controller'
 VANTAGE_DEVICES = 'vantage_devices'
 
 CONF_ONLY_AREAS = 'only_areas'
+CONF_DISABLE_CACHE = 'disable_cache'
 CONF_EXCLUDE_AREAS = 'exclude_areas'
+CONF_EXCLUDE_BUTTONS = 'exclude_buttons'
+CONF_EXCLUDE_KEYPADS = 'exclude_keypads'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -31,7 +34,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_ONLY_AREAS): cv.string,
         vol.Optional(CONF_EXCLUDE_AREAS): cv.string,
-        vol.Optional("disable_cache"): cv.boolean,  #FIXME
+        vol.Optional(CONF_EXCLUDE_BUTTONS): cv.boolean,
+        vol.Optional(CONF_EXCLUDE_KEYPADS): cv.boolean,
+        vol.Optional(CONF_DISABLE_CACHE): cv.boolean,  #FIXME
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -105,7 +110,7 @@ def setup(hass, base_config):
 
     vc = hass.data[VANTAGE_CONTROLLER]
 
-    vc.load_xml_db(config.get("disable_cache", False))
+    vc.load_xml_db(config.get(CONF_DISABLE_CACHE, False))
     vc.connect()
     _LOGGER.info("Connected to main repeater at %s", config[CONF_HOST])
 
@@ -171,12 +176,14 @@ def setup(hass, base_config):
         hass.data[VANTAGE_DEVICES]['sensor'].append((None, var))
 
     # buttons are sensors too: Their value is the name of the last action on them
-    for button in vc.buttons:
-        hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
+    if not config.get(CONF_EXCLUDE_BUTTONS):
+        for button in vc.buttons:
+            hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
 
     # and so are keypads.  Their value is the name of the last button pressed
-    for keypad in vc.keypads:
-        hass.data[VANTAGE_DEVICES]['sensor'].append((None, keypad))
+    if not config.get(CONF_EXCLUDE_KEYPADS):
+        for keypad in vc.keypads:
+            hass.data[VANTAGE_DEVICES]['sensor'].append((None, keypad))
 
     for component in ('light', 'cover', 'sensor', 'switch'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
