@@ -14,8 +14,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvantage==0.0.10']
-
 DOMAIN = 'vantage'
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +85,8 @@ def setup(hass, base_config):
         only_areas = set(only_areas.split(","))
     if exclude_areas:
         exclude_areas = set(exclude_areas.split(","))
-        
+
+    # TODO: handle this with YAML configuration
     name_mappings = {}
     name_mappings['main house'] = 'MH'
     name_mappings['office'] = 'MHO'
@@ -170,6 +169,14 @@ def setup(hass, base_config):
 
     for var in vc.variables:
         hass.data[VANTAGE_DEVICES]['sensor'].append((None, var))
+
+    # buttons are sensors too: Their value is the name of the last action on them
+    for button in vc.buttons:
+        hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
+
+    # and so are keypads.  Their value is the name of the last button pressed
+    for keypad in vc.keypads:
+        hass.data[VANTAGE_DEVICES]['sensor'].append((None, keypad))
 
     for component in ('light', 'cover', 'sensor', 'switch'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
