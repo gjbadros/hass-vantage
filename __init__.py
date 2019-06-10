@@ -26,6 +26,13 @@ CONF_DISABLE_CACHE = 'disable_cache'
 CONF_EXCLUDE_AREAS = 'exclude_areas'
 CONF_EXCLUDE_BUTTONS = 'exclude_buttons'
 CONF_EXCLUDE_KEYPADS = 'exclude_keypads'
+CONF_NAME_MAPPINGS = 'name_mappings'
+
+NAME_MAPPING_SCHEMA = vol.Schema({
+    vol.Required(CONF_AREA): cv.string,
+    vol.Required(CONF_TO): cv.string})
+
+NAME_MAPPINGS_SCHEMA = vol.All([NAME_MAPPING_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -37,6 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXCLUDE_BUTTONS): cv.boolean,
         vol.Optional(CONF_EXCLUDE_KEYPADS): cv.boolean,
         vol.Optional(CONF_DISABLE_CACHE): cv.boolean,  #FIXME
+        vol.Optional(CONF_NAME_MAPPINGS): NAME_MAPPINGS_SCHEMA
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -52,7 +60,7 @@ def setup(hass, base_config):
         value = call.data.get('value')
         if value == None:
             raise Exception("Missing value on vantage.set_variable_vid")
-        _LOGGER.info("Called SET_VARIABLE_VID service: " + str(call))
+        _LOGGER.info("Called SET_VARIABLE_VID service: %s", str(call))
         hass.data[VANTAGE_CONTROLLER].set_variable_vid(id, value)
 
     def handle_set_variable(call):
@@ -62,23 +70,23 @@ def setup(hass, base_config):
         value = call.data.get('value')
         if value == None:
             raise Exception("Missing value on vantage.set_variable")
-        _LOGGER.info("Called SET_VARIABLE service: " + str(call))
+        _LOGGER.info("Called SET_VARIABLE service: %s", str(call))
         hass.data[VANTAGE_CONTROLLER].set_variable(name, value)
-        
+
     def handle_call_task_vid(call):
         id = call.data.get('vid')
         if id == None:
             raise Exception("Missing vid on vantage.call_task_vid")
-        _LOGGER.info("Called CALL_TASK_VID service: " + str(call))
+        _LOGGER.info("Called CALL_TASK_VID service: %s", str(call))
         hass.data[VANTAGE_CONTROLLER].call_task_vid(id)
 
     def handle_call_task(call):
         name = call.data.get('name')
         if name == None:
             raise Exception("Missing name on vantage.call_task")
-        _LOGGER.info("Called CALL_TASK service: " + str(call))
+        _LOGGER.info("Called CALL_TASK service: %s", str(call))
         hass.data[VANTAGE_CONTROLLER].call_task(name)
-        
+
     hass.data[VANTAGE_CONTROLLER] = None
     hass.data[VANTAGE_DEVICES] = {'light': [], 'cover': [], 'sensor': [], 'switch': []}
 
@@ -127,39 +135,39 @@ def setup(hass, base_config):
             if area:
                 answer.append(area.name)
         return answer
-    
+
     # Sort our devices into types
     for output in vc.outputs:
-        _LOGGER.info("output = " + str(output))
+        _LOGGER.info("output = %s", output)
         area = vc._vid_to_area[output.area]
         # list of all the areas from child up to root
         area_lineage = get_lineage_from_area(area)
-        _LOGGER.info("area = " + area.name + "; lineage = " + str(area_lineage))
+        _LOGGER.info("area = %s; lineage = %a", area.name, area_lineage)
         keep = not (only_areas or exclude_areas)
         if only_areas:
             for a in area_lineage:
                 if a in only_areas:
-                    _LOGGER.info("maybe including " + area.name +
-                                 " because of only_areas = " + str(only_areas))
+                    _LOGGER.info("maybe including %s because of only_areas = %s",
+                                 area.name, only_areas)
                     keep = True
                     break
             if keep and exclude_areas:
                 for a in area_lineage:
                     if a in exclude_areas:
-                        _LOGGER.info("but " + a + " is in exclude_areas, so skipping")
+                        _LOGGER.info("but %s is in exclude_areas, so skipping", a)
                         keep = False
                         break
         elif exclude_areas:  # not specified include_areas
             keep = True
             for a in area_lineage:
                 if a in exclude_areas:
-                    _LOGGER.info("discarding " + area.name +
-                                 " because of exclude_areas = " + str(exclude_areas))
+                    _LOGGER.info("discarding %s because of exclude_areas = %s",
+                                 area.name, exclude_areas)
                     keep = False
                     break
         if not keep:
             continue
-        
+
         if output.type == 'BLIND':
             hass.data[VANTAGE_DEVICES]['cover'].append((area.name, output))
         elif output.type == 'RELAY':

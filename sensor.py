@@ -44,11 +44,6 @@ class VantageSensor(VantageDevice, Entity):
         """Return the state of the sensor."""
         return self._vantage_device.value
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._vantage_device.type
-
     def update(self):
         """Fetch new state data for the sensor.
 
