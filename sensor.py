@@ -58,8 +58,6 @@ class VantageSensor(VantageDevice, Entity):
     def _update_callback(self, _device):
         """Run when invoked by pyvantage when the device state changes."""
         self.schedule_update_ha_state()
-        if _device.type == 'button':
-            _device._keypad.schedule_update_ha_state()
 
     @property
     def device_state_attributes(self):
