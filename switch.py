@@ -62,13 +62,6 @@ class VantageSwitch(VantageDevice, SwitchDevice):
         self.schedule_update_ha_state()
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attr = {}
-        attr['Vantage Integration ID'] = self._vantage_device.id
-        return attr
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._vantage_device.last_level() > 0

@@ -208,7 +208,8 @@ class VantageDevice(Entity):
     def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.async_add_job(
-            self._controller.subscribe, self._vantage_device,
+            self._controller.subscribe,
+            self._vantage_device,
             self._update_callback
         )
 
@@ -230,3 +231,10 @@ class VantageDevice(Entity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attr = {}
+        attr['Vantage Integration ID'] = self._vantage_device.id
+        return attr

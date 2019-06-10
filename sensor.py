@@ -62,6 +62,5 @@ class VantageSensor(VantageDevice, Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr['Vantage Integration ID'] = self._vantage_device.id
-        return attr
+        attr = super.device_state_attributes
+        return { **attr, **self._vantage_device._extra_info }

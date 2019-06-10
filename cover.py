@@ -74,10 +74,3 @@ class VantageCover(VantageDevice, CoverDevice):
         level = self._vantage_device.level
         _LOGGER.debug("Vantage ID: %d updated to %f",
                       self._vantage_device.id, level)
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attr = {}
-        attr['Vantage Integration ID'] = self._vantage_device.id
-        return attr
