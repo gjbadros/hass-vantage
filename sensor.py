@@ -36,7 +36,8 @@ class VantageSensor(VantageDevice, Entity):
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the sensor."""
         VantageDevice.__init__(self, area_name, vantage_device, controller)
-        _LOGGER.info("Created variable: " + vantage_device.name)
+        _LOGGER.info("Created sensor (%s): %s", vantage_device.type,
+                     vantage_device.name)
 
     @property
     def state(self):
@@ -54,10 +55,15 @@ class VantageSensor(VantageDevice, Entity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
+    def _update_callback(self, _device):
+        """Run when invoked by pyvantage when the device state changes."""
+        self.schedule_update_ha_state()
+        if _device.type == 'button':
+            _device._keypad.schedule_update_ha_state()
+
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
         attr['Vantage Integration ID'] = self._vantage_device.id
         return attr
-        
