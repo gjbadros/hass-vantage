@@ -50,6 +50,16 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+def mappings_from(nm):
+    """Return a dictionary of name mappings from the name_mappings config setting."""
+    answer = {}
+    for mapping in nm:
+        area = mapping[CONF_AREA]
+        to = mapping[CONF_TO]
+        answer[area] = to
+        _LOGGER.debug("Adding mapping of '%s' to '%s'", area, to)
+    return answer
+
 
 def setup(hass, base_config):
     """Set up the Vantage component."""
@@ -93,25 +103,15 @@ def setup(hass, base_config):
     hass.data[VANTAGE_DEVICES] = {'light': [], 'cover': [], 'sensor': [], 'switch': []}
 
     config = base_config.get(DOMAIN)
-    only_areas = config.get(CONF_ONLY_AREAS, None)
-    exclude_areas = config.get(CONF_EXCLUDE_AREAS, None)
+    only_areas = config.get(CONF_ONLY_AREAS)
+    exclude_areas = config.get(CONF_EXCLUDE_AREAS)
 
     if only_areas:
         only_areas = set(only_areas.split(","))
     if exclude_areas:
         exclude_areas = set(exclude_areas.split(","))
 
-    # TODO: handle this with YAML configuration
-    name_mappings = {}
-    name_mappings['main house'] = 'MH'
-    name_mappings['office'] = 'MHO'
-    name_mappings['pool house'] = 'PH'
-    name_mappings['guest house'] = 'GH'
-    name_mappings['upper floor'] = 'U'
-    name_mappings['main floor'] = 'M'
-    name_mappings['basement'] = 'B'
-    name_mappings['outside'] = 'OUT'
-    name_mappings['0-10v relays'] = True # means to skip
+    name_mappings = mappings_from(config.get(CONF_NAME_MAPPINGS))
 
     hass.data[VANTAGE_CONTROLLER] = Vantage(
         config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD],
