@@ -27,6 +27,8 @@ CONF_EXCLUDE_AREAS = 'exclude_areas'
 CONF_EXCLUDE_BUTTONS = 'exclude_buttons'
 CONF_EXCLUDE_KEYPADS = 'exclude_keypads'
 CONF_NAME_MAPPINGS = 'name_mappings'
+CONF_AREA = 'area'
+CONF_TO = 'to'
 
 NAME_MAPPING_SCHEMA = vol.Schema({
     vol.Required(CONF_AREA): cv.string,
