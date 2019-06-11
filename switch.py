@@ -6,8 +6,7 @@ https://home-assistant.io/components/light.vantage/
 """
 import logging
 
-from homeassistant.components.switch import (
-    SwitchDevice, DOMAIN )
+from homeassistant.components.switch import (SwitchDevice, DOMAIN)
 from ..vantage import (
     VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
 

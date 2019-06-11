@@ -58,4 +58,4 @@ class VantageSensor(VantageDevice, Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = super().device_state_attributes
-        return { **attr, **self._vantage_device._extra_info }
+        return {**attr, **self._vantage_device._extra_info}

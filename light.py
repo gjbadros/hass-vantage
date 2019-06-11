@@ -14,7 +14,7 @@ from ..vantage import (
 
 from homeassistant.util.color import (
     color_hs_to_RGB, color_temperature_to_rgb, color_RGB_to_hs,
-    color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
+    color_temperature_mired_to_kelvin)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +78,10 @@ class VantageLight(VantageDevice, Light):
         _LOGGER.debug("got via rgb_color")
         return self._vantage_device.rgb
 
-    def color_temperature_to_dw_27k41k(self,kelvin):
+    def color_temperature_to_dw_27k41k(self, kelvin):
+        """Convert a kelvin color temperature to a pair of values
+        for a dual-white LED fixture with a 27K white and a 41K white
+        light source."""
         if kelvin < 2700:
             red = 255
             blue = 0
@@ -92,7 +95,7 @@ class VantageLight(VantageDevice, Light):
         max_color = max(red, blue)
         ratio = 255/max_color * self.brightness/255
         answer = (red*ratio, 0, blue*ratio)
-        _LOGGER.info("using " + str(answer) + "for color temp " + str(kelvin))
+        _LOGGER.info("using %s for color temp %s", answer, kelvin)
         return (red*ratio, 0, blue*ratio)
  
     @property
