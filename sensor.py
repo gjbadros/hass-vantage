@@ -36,7 +36,7 @@ class VantageSensor(VantageDevice, Entity):
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the sensor."""
         VantageDevice.__init__(self, area_name, vantage_device, controller)
-        _LOGGER.info("Created sensor (%s): %s", vantage_device.type,
+        _LOGGER.info("Created sensor (%s): %s", vantage_device.kind,
                      vantage_device.name)
 
     @property

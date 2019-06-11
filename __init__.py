@@ -192,9 +192,6 @@ def setup(hass, base_config):
     # buttons and dry contacts are are sensors too:
     # Their value is the name of the last action on them
     for button in vc.buttons:
-        _LOGGER.debug("kind = %s, ceb = %s, cec = %s",
-                      button.kind, config.get(CONF_EXCLUDE_BUTTONS),
-                      config.get(CONF_EXCLUDE_CONTACTS))
         if ((button.kind == 'button' and not config.get(CONF_EXCLUDE_BUTTONS)) or
                 (button.kind == 'contact' and not config.get(CONF_EXCLUDE_CONTACTS))):
             hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
