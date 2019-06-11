@@ -50,6 +50,7 @@ class VantageLight(VantageDevice, Light):
         """Initialize the light."""
         self._prev_brightness = None
         VantageDevice.__init__(self, area_name, vantage_device, controller)
+        vantage_device._vantage_device.set_ramp_sec(1,1,1)
 
     @property
     def supported_features(self):
@@ -125,12 +126,12 @@ class VantageLight(VantageDevice, Light):
             rgb = color_hs_to_RGB(*hs_color)
             self._vantage_device.rgb = [*rgb]
         elif ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.info("set via ATTR_COLOR_TEMP - " + str(kwargs[ATTR_COLOR_TEMP]))
+            _LOGGER.info("set via ATTR_COLOR_TEMP - %s", kwargs[ATTR_COLOR_TEMP])
             # Color temp in HA is in mireds: https://en.wikipedia.org/wiki/Mired
             # M = 1000000/KELVIN_TEMP
             kelvin = int(color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP]))
-            _LOGGER.info("vantage color temp kelvin = " + str(kelvin))
+            _LOGGER.info("vantage color temp kelvin = %s", kelvin)
             if self._vantage_device._dmx_color:
                 # do conversion
                 rgb = color_temperature_to_rgb(kelvin)
