@@ -50,7 +50,7 @@ class VantageLight(VantageDevice, Light):
         """Initialize the light."""
         self._prev_brightness = None
         VantageDevice.__init__(self, area_name, vantage_device, controller)
-        vantage_device._vantage_device.set_ramp_sec(1,1,1)
+        vantage_device.set_ramp_sec(1,1,1)
 
     @property
     def supported_features(self):
