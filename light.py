@@ -9,12 +9,13 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
-from ..vantage import (
-    VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
 
 from homeassistant.util.color import (
     color_hs_to_RGB, color_temperature_to_rgb, color_RGB_to_hs,
     color_temperature_mired_to_kelvin)
+
+from ..vantage import (
+    VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class VantageLight(VantageDevice, Light):
         """Initialize the light."""
         self._prev_brightness = None
         VantageDevice.__init__(self, area_name, vantage_device, controller)
-        vantage_device.set_ramp_sec(1,1,1)
+        vantage_device.set_ramp_sec(1, 1, 1)
 
     @property
     def supported_features(self):
@@ -98,7 +99,7 @@ class VantageLight(VantageDevice, Light):
         answer = (red*ratio, 0, blue*ratio)
         _LOGGER.info("using %s for color temp %s", answer, kelvin)
         return (red*ratio, 0, blue*ratio)
- 
+
     @property
     def hs_color(self):
         """Return the HS color value."""

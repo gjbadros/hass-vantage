@@ -196,6 +196,9 @@ def setup(hass, base_config):
                 (button.kind == 'contact' and not config.get(CONF_EXCLUDE_CONTACTS))):
             hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
 
+    for sensor in vc.sensors:
+        hass.data[VANTAGE_DEVICES]['sensor'].append((sensor._area, sensor))
+
     # and so are keypads.  Their value is the name of the last button pressed
     if not config.get(CONF_EXCLUDE_KEYPADS):
         for keypad in vc.keypads:
@@ -251,6 +254,6 @@ class VantageDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
+        attr = self._vantage_device._extra_info.copy()
         attr['Vantage Integration ID'] = self._vantage_device.id
         return attr
