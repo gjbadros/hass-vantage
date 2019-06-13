@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for (area_name, device) in hass.data[VANTAGE_DEVICES]['sensor']:
         if not area_name:
             area_name = ""
-        if device.needs_poll:
+        if device.needs_poll():
             dev = VantagePollingSensor(area_name, device,
                                        hass.data[VANTAGE_CONTROLLER])
         else:
