@@ -27,6 +27,7 @@ CONF_EXCLUDE_AREAS = 'exclude_areas'
 CONF_EXCLUDE_BUTTONS = 'exclude_buttons'
 CONF_EXCLUDE_CONTACTS = 'exclude_contacts'
 CONF_EXCLUDE_KEYPADS = 'exclude_keypads'
+CONF_EXCLUDE_NAME_SUBSTRING = 'exclude_name_substring'
 CONF_NAME_MAPPINGS = 'name_mappings'
 CONF_AREA = 'area'
 CONF_TO = 'to'
@@ -44,6 +45,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_ONLY_AREAS): cv.string,
         vol.Optional(CONF_EXCLUDE_AREAS): cv.string,
+        vol.Optional(CONF_EXCLUDE_NAME_SUBSTRING): cv.string,
         vol.Optional(CONF_EXCLUDE_BUTTONS): cv.boolean,
         vol.Optional(CONF_EXCLUDE_CONTACTS): cv.boolean,
         vol.Optional(CONF_EXCLUDE_KEYPADS): cv.boolean,
@@ -88,11 +90,11 @@ def setup(hass, base_config):
         hass.data[VANTAGE_CONTROLLER].set_variable(name, value)
 
     def handle_call_task_vid(call):
-        id = call.data.get('vid')
-        if id is None:
+        vid = call.data.get('vid')
+        if vid is None:
             raise Exception("Missing vid on vantage.call_task_vid")
         _LOGGER.info("Called CALL_TASK_VID service: %s", str(call))
-        hass.data[VANTAGE_CONTROLLER].call_task_vid(id)
+        hass.data[VANTAGE_CONTROLLER].call_task_vid(vid)
 
     def handle_call_task(call):
         name = call.data.get('name')
@@ -108,11 +110,14 @@ def setup(hass, base_config):
     config = base_config.get(DOMAIN)
     only_areas = config.get(CONF_ONLY_AREAS)
     exclude_areas = config.get(CONF_EXCLUDE_AREAS)
+    exclude_name_substring = config.get(CONF_EXCLUDE_NAME_SUBSTRING)
 
     if only_areas:
         only_areas = set(only_areas.split(","))
     if exclude_areas:
         exclude_areas = set(exclude_areas.split(","))
+    if exclude_name_substring:
+        exclude_name_substring = set(exclude_name_substring.split(","))
 
     name_mappings = mappings_from(config.get(CONF_NAME_MAPPINGS))
 
@@ -170,6 +175,14 @@ def setup(hass, base_config):
                                  area.name, exclude_areas)
                     keep = False
                     break
+        if not keep:
+            continue
+        for ns in exclude_name_substring:
+            if ns in output.name:
+                _LOGGER.debug("skipping %s because exclude_name_substring has %s",
+                              output, ns)
+                keep = False
+                break
         if not keep:
             continue
 
