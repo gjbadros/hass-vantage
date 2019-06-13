@@ -132,6 +132,14 @@ def setup(hass, base_config):
     vc.connect()
     _LOGGER.info("Connected to main repeater at %s", config[CONF_HOST])
 
+    def is_excluded_name(entity):
+        for ns in exclude_name_substring:
+            if ns in entity.name:
+                _LOGGER.debug("skipping %s because exclude_name_substring has %s",
+                              entity, ns)
+                return True
+        return False
+
 
     def get_lineage_from_area(area):
         count = 0
@@ -177,13 +185,7 @@ def setup(hass, base_config):
                     break
         if not keep:
             continue
-        for ns in exclude_name_substring:
-            if ns in output.name:
-                _LOGGER.debug("skipping %s because exclude_name_substring has %s",
-                              output, ns)
-                keep = False
-                break
-        if not keep:
+        if is_excluded_name(output):
             continue
 
         if output.kind == 'BLIND':
@@ -207,10 +209,12 @@ def setup(hass, base_config):
     for button in vc.buttons:
         if ((button.kind == 'button' and not config.get(CONF_EXCLUDE_BUTTONS)) or
                 (button.kind == 'contact' and not config.get(CONF_EXCLUDE_CONTACTS))):
-            hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
+            if not is_excluded_name(button):
+                hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
 
     for sensor in vc.sensors:
-        hass.data[VANTAGE_DEVICES]['sensor'].append((sensor._area, sensor))
+        if not is_excluded_name(sensor):
+            hass.data[VANTAGE_DEVICES]['sensor'].append((sensor._area, sensor))
 
     # and so are keypads.  Their value is the name of the last button pressed
     if not config.get(CONF_EXCLUDE_KEYPADS):
