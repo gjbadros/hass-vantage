@@ -52,7 +52,7 @@ class VantageSensor(VantageDevice, Entity):
         if k == 'current':
             self._unit_of_measurement = 'amp'
             self._device_class = 'power'
-        if k.find('lightsensor') >= 0:
+        if k == 'light':
             self._unit_of_measurement = 'lm'
             self._device_class = 'illuminance'
         _LOGGER.info("Created sensor (%s): %s", vantage_device.kind,
