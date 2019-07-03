@@ -40,6 +40,8 @@ class VantageSensor(VantageDevice, Entity):
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the sensor."""
         VantageDevice.__init__(self, area_name, vantage_device, controller)
+        self._unit_of_measurement = None
+        self._device_class = None
         k = self._vantage_device.kind
         if k == 'temperature':
             self._unit_of_measurement = '°C'
@@ -75,7 +77,7 @@ class VantageSensor(VantageDevice, Entity):
     @property
     def device_class(self):
         """Return the device class for this sensor."""
-        k = self._device_class
+        return self._device_class
 
     def _update_callback(self, _device):
         """Run when invoked by pyvantage when the device state changes."""
