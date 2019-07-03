@@ -84,7 +84,7 @@ class VantageSensor(VantageDevice, Entity):
         self.schedule_update_ha_state()
 
 # TODO: this maybe could be just returning true for should_poll
-class VantagePollingSensor(VantageDevice, Entity):
+class VantagePollingSensor(VantageSensor):
     """Representation of a Vantage sensor that needs polling."""
     def update(self):
         """Fetch new data."""
