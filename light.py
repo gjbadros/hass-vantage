@@ -73,7 +73,7 @@ class VantageLight(VantageDevice, Light):
     def color_temp(self):
         """Return the color temperature of the light."""
         ct = self._vantage_device._color_temp
-        return color_util.color_temperature_kelvin_to_mired(ct)
+        return color_temperature_kelvin_to_mired(ct)
 
     @property
     def rgb_color(self):
