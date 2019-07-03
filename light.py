@@ -12,7 +12,8 @@ from homeassistant.components.light import (
 
 from homeassistant.util.color import (
     color_hs_to_RGB, color_temperature_to_rgb, color_RGB_to_hs,
-    color_temperature_mired_to_kelvin)
+    color_temperature_mired_to_kelvin,
+    color_temperature_kelvin_to_mired)
 
 from ..vantage import (
     VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
@@ -71,13 +72,12 @@ class VantageLight(VantageDevice, Light):
     @property
     def color_temp(self):
         """Return the color temperature of the light."""
-        _LOGGER.debug("got via color_temp")
-        return 1000000/self._vantage_device._color_temp # convert from kelvin to mireds
+        ct = self._vantage_device._color_temp
+        return color_util.color_temperature_kelvin_to_mired(ct)
 
     @property
     def rgb_color(self):
         """Return the RGB color value."""
-        _LOGGER.debug("got via rgb_color")
         return self._vantage_device.rgb
 
     def color_temperature_to_dw_27k41k(self, kelvin):
@@ -103,7 +103,6 @@ class VantageLight(VantageDevice, Light):
     @property
     def hs_color(self):
         """Return the HS color value."""
-        _LOGGER.debug("got via hs_color")
         rgb = self._vantage_device.rgb
         hs = color_RGB_to_hs(*rgb)
         return hs # self._vantage_device.hs

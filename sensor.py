@@ -54,6 +54,20 @@ class VantageSensor(VantageDevice, Entity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement for this sensor."""
+        k = self._vantage_device.kind
+        if k == 'temperature':
+            return '°C'
+        if k == 'power':
+            return 'watt'
+        if k == 'current':
+            return 'amp'
+        if k.find('lightsensor') >= 0:
+            return 'lumen'
+        return None
+
     def _update_callback(self, _device):
         """Run when invoked by pyvantage when the device state changes."""
         self.schedule_update_ha_state()
