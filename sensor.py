@@ -40,6 +40,19 @@ class VantageSensor(VantageDevice, Entity):
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the sensor."""
         VantageDevice.__init__(self, area_name, vantage_device, controller)
+        k = self._vantage_device.kind
+        if k == 'temperature':
+            self._unit_of_measurement = '°C'
+            self._device_class = 'temperature'
+        if k == 'power':
+            self._unit_of_measurement = 'watt'
+            self._device_class = 'power'
+        if k == 'current':
+            self._unit_of_measurement = 'amp'
+            self._device_class = 'power'
+        if k.find('lightsensor') >= 0:
+            self._unit_of_measurement = 'lm'
+            self._device_class = 'illuminance'
         _LOGGER.info("Created sensor (%s): %s", vantage_device.kind,
                      vantage_device.name)
 
@@ -57,16 +70,12 @@ class VantageSensor(VantageDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement for this sensor."""
-        k = self._vantage_device.kind
-        if k == 'temperature':
-            return '°C'
-        if k == 'power':
-            return 'watt'
-        if k == 'current':
-            return 'amp'
-        if k.find('lightsensor') >= 0:
-            return 'lumen'
-        return None
+        return self._unit_of_measurement
+
+    @property
+    def device_class(self):
+        """Return the device class for this sensor."""
+        k = self._device_class
 
     def _update_callback(self, _device):
         """Run when invoked by pyvantage when the device state changes."""
