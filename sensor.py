@@ -55,8 +55,8 @@ class VantageSensor(VantageDevice, Entity):
         if k == 'light':
             self._unit_of_measurement = 'lm'
             self._device_class = 'illuminance'
-        _LOGGER.info("Created sensor (%s): %s", vantage_device.kind,
-                     vantage_device.name)
+        _LOGGER.debug("Created sensor (%s): %s", vantage_device.kind,
+                      vantage_device.name)
 
     @property
     def state(self):
