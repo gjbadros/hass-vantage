@@ -60,6 +60,14 @@ class VantageSensor(VantageDevice, Entity, RestoreEntity):
         _LOGGER.debug("Created sensor (%s): %s", vantage_device.kind,
                       vantage_device.name)
 
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._vantage_device.value = state.state
+
     @property
     def state(self):
         """Return the state of the sensor."""
