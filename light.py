@@ -58,8 +58,10 @@ class VantageLight(VantageDevice, Light):
     def supported_features(self):
         """Flag supported features."""
         return (SUPPORT_BRIGHTNESS |
-                (SUPPORT_COLOR_TEMP if self._vantage_device.support_color_temp else 0) |
-                (SUPPORT_COLOR if self._vantage_device.support_color else 0))
+                (SUPPORT_COLOR_TEMP
+                 if self._vantage_device.support_color_temp else 0) |
+                (SUPPORT_COLOR
+                 if self._vantage_device.support_color else 0))
 
     @property
     def brightness(self):
@@ -105,7 +107,7 @@ class VantageLight(VantageDevice, Light):
         """Return the HS color value."""
         rgb = self._vantage_device.rgb
         hs = color_RGB_to_hs(*rgb)
-        return hs # self._vantage_device.hs
+        return hs  # self._vantage_device.hs
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
@@ -126,8 +128,10 @@ class VantageLight(VantageDevice, Light):
             rgb = color_hs_to_RGB(*hs_color)
             self._vantage_device.rgb = [*rgb]
         elif ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.info("set via ATTR_COLOR_TEMP - %s", kwargs[ATTR_COLOR_TEMP])
-            # Color temp in HA is in mireds: https://en.wikipedia.org/wiki/Mired
+            _LOGGER.info("set via ATTR_COLOR_TEMP - %s",
+                         kwargs[ATTR_COLOR_TEMP])
+            # Color temp in HA is in mireds:
+            # https://en.wikipedia.org/wiki/Mired
             # M = 1000000/KELVIN_TEMP
             kelvin = int(color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP]))

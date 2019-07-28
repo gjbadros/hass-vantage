@@ -27,7 +27,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             dev = VantagePollingSensor(area_name, device,
                                        hass.data[VANTAGE_CONTROLLER])
         else:
-            dev = VantageSensor(area_name, device, hass.data[VANTAGE_CONTROLLER])
+            dev = VantageSensor(area_name, device,
+                                hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 
     add_devices(devs, True)
@@ -82,6 +83,7 @@ class VantageSensor(VantageDevice, Entity):
     def _update_callback(self, _device):
         """Run when invoked by pyvantage when the device state changes."""
         self.schedule_update_ha_state()
+
 
 # TODO: this maybe could be just returning true for should_poll
 class VantagePollingSensor(VantageSensor):

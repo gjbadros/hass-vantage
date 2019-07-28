@@ -49,13 +49,15 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXCLUDE_BUTTONS): cv.boolean,
         vol.Optional(CONF_EXCLUDE_CONTACTS): cv.boolean,
         vol.Optional(CONF_EXCLUDE_KEYPADS): cv.boolean,
-        vol.Optional(CONF_DISABLE_CACHE): cv.boolean,  #FIXME
+        vol.Optional(CONF_DISABLE_CACHE): cv.boolean,  # FIXME
         vol.Optional(CONF_NAME_MAPPINGS): NAME_MAPPINGS_SCHEMA
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
 def mappings_from(nm):
-    """Return a dictionary of name mappings from the name_mappings config setting."""
+    """Return a dictionary of name mappings
+    from the name_mappings config setting."""
     answer = {}
     for mapping in nm:
         area = mapping[CONF_AREA]
@@ -135,11 +137,11 @@ def setup(hass, base_config):
     def is_excluded_name(entity):
         for ns in exclude_name_substring:
             if ns in entity.name:
-                _LOGGER.debug("skipping %s because exclude_name_substring has %s",
-                              entity, ns)
+                _LOGGER.debug(
+                    "skipping %s because exclude_name_substring has %s",
+                    entity, ns)
                 return True
         return False
-
 
     def get_lineage_from_area(area):
         count = 0
@@ -165,14 +167,16 @@ def setup(hass, base_config):
         if only_areas:
             for a in area_lineage:
                 if a in only_areas:
-                    _LOGGER.info("maybe including %s because of only_areas = %s",
+                    _LOGGER.info("maybe including %s "
+                                 "because of only_areas = %s",
                                  area.name, only_areas)
                     keep = True
                     break
             if keep and exclude_areas:
                 for a in area_lineage:
                     if a in exclude_areas:
-                        _LOGGER.info("but %s is in exclude_areas, so skipping", a)
+                        _LOGGER.info("button %s is in exclude_areas,"
+                                     " so skipping", a)
                         keep = False
                         break
         elif exclude_areas:  # not specified include_areas
@@ -193,13 +197,13 @@ def setup(hass, base_config):
         elif output.kind == 'RELAY':
             hass.data[VANTAGE_DEVICES]['switch'].append((area.name, output))
         elif output.kind == 'LIGHT':
-            _LOGGER.debug("adding light vid=%s to area=%s", output._vid, area.name)
+            _LOGGER.debug("adding light vid=%s to area=%s",
+                          output._vid, area.name)
             hass.data[VANTAGE_DEVICES]['light'].append((area.name, output))
         elif output.kind == 'GROUP':
             _LOGGER.debug("adding group (of lights/relays) vid=%s to area=%s",
                           output._vid, area.name)
             hass.data[VANTAGE_DEVICES]['light'].append((area.name, output))
-
 
     for var in vc.variables:
         hass.data[VANTAGE_DEVICES]['sensor'].append((None, var))
@@ -207,8 +211,10 @@ def setup(hass, base_config):
     # buttons and dry contacts are are sensors too:
     # Their value is the name of the last action on them
     for button in vc.buttons:
-        if ((button.kind == 'button' and not config.get(CONF_EXCLUDE_BUTTONS)) or
-                (button.kind == 'contact' and not config.get(CONF_EXCLUDE_CONTACTS))):
+        if ((button.kind == 'button' and
+             not config.get(CONF_EXCLUDE_BUTTONS)) or
+            (button.kind == 'contact' and
+             not config.get(CONF_EXCLUDE_CONTACTS))):
             if not is_excluded_name(button):
                 hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
 
@@ -229,6 +235,7 @@ def setup(hass, base_config):
     hass.services.register(DOMAIN, 'set_variable', handle_set_variable)
     hass.services.register(DOMAIN, 'call_task', handle_call_task)
     return True
+
 
 class VantageDevice(Entity):
     """Representation of a Vantage device entity."""
