@@ -7,7 +7,10 @@ https://home-assistant.io/components/sensor.vantage/
 
 import logging
 
-from homeassistant.helpers.entity import Entity
+# we want to restore entity values because vantage models dry-contacts
+# and keypads and buttons as instantaneous actions whose state
+# cannot be queried from the vantage controller, so we need
+# to use hass state to keep track of them between reboots
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from ..vantage import (
@@ -36,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-class VantageSensor(VantageDevice, Entity, RestoreEntity):
+class VantageSensor(VantageDevice, RestoreEntity):
     """Representation of a Sensor."""
 
     def __init__(self, area_name, vantage_device, controller):
@@ -65,6 +68,7 @@ class VantageSensor(VantageDevice, Entity, RestoreEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if not state:
+            _LOGGER.warning("no state retrieved for %s", self)
             return
         self._vantage_device.value = state.state
 
