@@ -72,7 +72,11 @@ class VantageSensor(VantageDevice, RestoreEntity):
             return
         _LOGGER.info("got state for %s = %s", self, state.state)
         self._vantage_device.value = state.state
-        self.hass.async_add_job(self._update_callback)
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return true if unable to access real state of entity."""
+        return True
 
     @property
     def state(self):
@@ -111,6 +115,11 @@ class VantagePollingSensor(VantageSensor):
     def state(self):
         """Return the state of the sensor."""
         return self._vantage_device.value
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return true if unable to access real state of entity."""
+        return False
 
     @property
     def should_poll(self):
