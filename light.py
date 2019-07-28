@@ -99,7 +99,7 @@ class VantageLight(VantageDevice, Light):
         max_color = max(red, blue)
         ratio = 255/max_color * self.brightness/255
         answer = (red*ratio, 0, blue*ratio)
-        _LOGGER.info("using %s for color temp %s", answer, kelvin)
+        _LOGGER.debug("using %s for color temp %s", answer, kelvin)
         return (red*ratio, 0, blue*ratio)
 
     @property
@@ -120,22 +120,22 @@ class VantageLight(VantageDevice, Light):
         self._prev_brightness = brightness
         self._vantage_device.level = to_vantage_level(brightness)
         if ATTR_RGB_COLOR in kwargs:
-            _LOGGER.info("set via ATTR_RGB_COLOR")
+            _LOGGER.debug("set via ATTR_RGB_COLOR")
             self._vantage_device.rgb = kwargs[ATTR_RGB_COLOR]
         elif ATTR_HS_COLOR in kwargs:
-            _LOGGER.info("set via ATTR_HS_COLOR")
+            _LOGGER.debug("set via ATTR_HS_COLOR")
             hs_color = kwargs[ATTR_HS_COLOR]
             rgb = color_hs_to_RGB(*hs_color)
             self._vantage_device.rgb = [*rgb]
         elif ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.info("set via ATTR_COLOR_TEMP - %s",
-                         kwargs[ATTR_COLOR_TEMP])
+            _LOGGER.debug("set via ATTR_COLOR_TEMP - %s",
+                          kwargs[ATTR_COLOR_TEMP])
             # Color temp in HA is in mireds:
             # https://en.wikipedia.org/wiki/Mired
             # M = 1000000/KELVIN_TEMP
             kelvin = int(color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP]))
-            _LOGGER.info("vantage color temp kelvin = %s", kelvin)
+            _LOGGER.debug("vantage color temp kelvin = %s", kelvin)
             if self._vantage_device._dmx_color:
                 # do conversion
                 rgb = color_temperature_to_rgb(kelvin)

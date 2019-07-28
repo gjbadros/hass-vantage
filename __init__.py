@@ -78,7 +78,7 @@ def setup(hass, base_config):
         value = call.data.get('value')
         if value is None:
             raise Exception("Missing value on vantage.set_variable_vid")
-        _LOGGER.info("Called SET_VARIABLE_VID service: %s", call)
+        _LOGGER.debug("Called SET_VARIABLE_VID service: %s", call)
         hass.data[VANTAGE_CONTROLLER].set_variable_vid(vid, value)
 
     def handle_set_variable(call):
@@ -88,21 +88,21 @@ def setup(hass, base_config):
         value = call.data.get('value')
         if value is None:
             raise Exception("Missing value on vantage.set_variable")
-        _LOGGER.info("Called SET_VARIABLE service: %s", str(call))
+        _LOGGER.debug("Called SET_VARIABLE service: %s", str(call))
         hass.data[VANTAGE_CONTROLLER].set_variable(name, value)
 
     def handle_call_task_vid(call):
         vid = call.data.get('vid')
         if vid is None:
             raise Exception("Missing vid on vantage.call_task_vid")
-        _LOGGER.info("Called CALL_TASK_VID service: %s", str(call))
+        _LOGGER.debug("Called CALL_TASK_VID service: %s", str(call))
         hass.data[VANTAGE_CONTROLLER].call_task_vid(vid)
 
     def handle_call_task(call):
         name = call.data.get('name')
         if name is None:
             raise Exception("Missing name on vantage.call_task")
-        _LOGGER.info("Called CALL_TASK service: %s", str(call))
+        _LOGGER.debug("Called CALL_TASK service: %s", str(call))
         hass.data[VANTAGE_CONTROLLER].call_task(name)
 
     hass.data[VANTAGE_CONTROLLER] = None
@@ -132,7 +132,7 @@ def setup(hass, base_config):
 
     vc.load_xml_db(config.get(CONF_DISABLE_CACHE, False))
     vc.connect()
-    _LOGGER.info("Connected to main repeater at %s", config[CONF_HOST])
+    _LOGGER.debug("Connected to main repeater at %s", config[CONF_HOST])
 
     def is_excluded_name(entity):
         for ns in exclude_name_substring:
@@ -158,33 +158,33 @@ def setup(hass, base_config):
 
     # Sort our devices into types
     for output in vc.outputs:
-        _LOGGER.info("output = %s", output)
+        _LOGGER.debug("output = %s", output)
         area = vc._vid_to_area[output.area]
         # list of all the areas from child up to root
         area_lineage = get_lineage_from_area(area)
-        _LOGGER.info("area = %s; lineage = %a", area.name, area_lineage)
+        _LOGGER.debug("area = %s; lineage = %a", area.name, area_lineage)
         keep = not (only_areas or exclude_areas)
         if only_areas:
             for a in area_lineage:
                 if a in only_areas:
-                    _LOGGER.info("maybe including %s "
-                                 "because of only_areas = %s",
-                                 area.name, only_areas)
+                    _LOGGER.debug("maybe including %s "
+                                  "because of only_areas = %s",
+                                  area.name, only_areas)
                     keep = True
                     break
             if keep and exclude_areas:
                 for a in area_lineage:
                     if a in exclude_areas:
-                        _LOGGER.info("button %s is in exclude_areas,"
-                                     " so skipping", a)
+                        _LOGGER.debug("button %s is in exclude_areas,"
+                                      " so skipping", a)
                         keep = False
                         break
         elif exclude_areas:  # not specified include_areas
             keep = True
             for a in area_lineage:
                 if a in exclude_areas:
-                    _LOGGER.info("discarding %s because of exclude_areas = %s",
-                                 area.name, exclude_areas)
+                    _LOGGER.debug("discarding %s because exclude_areas = %s",
+                                  area.name, exclude_areas)
                     keep = False
                     break
         if not keep:
