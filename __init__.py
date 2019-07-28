@@ -276,6 +276,11 @@ class VantageDevice(Entity):
         return False
 
     @property
+    def kind(self):
+        """The vantage device kind."""
+        return self._vantage_device._kind
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = self._vantage_device._extra_info.copy()
