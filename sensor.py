@@ -1,5 +1,5 @@
 """
-Support for Vantage variables as sensors.
+Support for Vantage variables and other sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.vantage/
@@ -8,6 +8,7 @@ https://home-assistant.io/components/sensor.vantage/
 import logging
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from ..vantage import (
     VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
@@ -35,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-class VantageSensor(VantageDevice, Entity):
+class VantageSensor(VantageDevice, Entity, RestoreEntity):
     """Representation of a Sensor."""
 
     def __init__(self, area_name, vantage_device, controller):
