@@ -70,6 +70,7 @@ class VantageSensor(VantageDevice, RestoreEntity):
         if not state:
             _LOGGER.warning("no state retrieved for %s", self)
             return
+        _LOGGER.info("got state for %s = %s", self, state.state)
         self._vantage_device.value = state.state
 
     @property
