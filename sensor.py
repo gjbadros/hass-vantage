@@ -72,6 +72,7 @@ class VantageSensor(VantageDevice, RestoreEntity):
             return
         _LOGGER.info("got state for %s = %s", self, state.state)
         self._vantage_device.value = state.state
+        self.hass.async_add_job(self._update_callback)
 
     @property
     def state(self):
