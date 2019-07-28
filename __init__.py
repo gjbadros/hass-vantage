@@ -278,7 +278,7 @@ class VantageDevice(Entity):
     @property
     def kind(self):
         """The vantage device kind."""
-        return self._vantage_device._kind
+        return self._vantage_device.kind
 
     @property
     def device_state_attributes(self):
