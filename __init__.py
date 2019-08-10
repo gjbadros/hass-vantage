@@ -113,13 +113,14 @@ def setup(hass, base_config):
     only_areas = config.get(CONF_ONLY_AREAS)
     exclude_areas = config.get(CONF_EXCLUDE_AREAS)
     exclude_name_substring = config.get(CONF_EXCLUDE_NAME_SUBSTRING)
+    set_exclude_name_substring = set()
 
     if only_areas:
         only_areas = set(only_areas.split(","))
     if exclude_areas:
         exclude_areas = set(exclude_areas.split(","))
     if exclude_name_substring:
-        exclude_name_substring = set(exclude_name_substring.split(","))
+        set_exclude_name_substring = set(exclude_name_substring.split(","))
 
     name_mappings = mappings_from(config.get(CONF_NAME_MAPPINGS))
 
@@ -135,7 +136,7 @@ def setup(hass, base_config):
     _LOGGER.debug("Connected to main repeater at %s", config[CONF_HOST])
 
     def is_excluded_name(entity):
-        for ns in exclude_name_substring:
+        for ns in set_exclude_name_substring:
             if ns in entity.name:
                 _LOGGER.debug(
                     "skipping %s because exclude_name_substring has %s",
