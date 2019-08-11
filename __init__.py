@@ -152,14 +152,14 @@ def setup(hass, base_config):
             parent_vid = area.parent
             if parent_vid == 0:
                 break
-            area = vc._vid_to_area.get(parent_vid, None)
+            area = vc._vid_to_area.get(parent_vid)
             if area:
                 answer.append(area.name)
         return answer
 
     def should_keep_for_area_vid(area_vid):
         area = vc._vid_to_area.get(area_vid)
-        if not area:
+        if area_vid <= 0 or not area:
             # no area, then we omit this if only_areas was specified,
             # and include it (since it can't match an exclude_areas)
             # otherwise
@@ -220,7 +220,8 @@ def setup(hass, base_config):
             hass.data[VANTAGE_DEVICES]['light'].append((area.name, output))
 
     for var in vc.variables:
-        hass.data[VANTAGE_DEVICES]['sensor'].append((None, var))
+        if not is_excluded_name(var):
+            hass.data[VANTAGE_DEVICES]['sensor'].append((None, var))
 
     # buttons and dry contacts are are sensors too:
     # Their value is the name of the last action on them
