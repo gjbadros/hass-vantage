@@ -3,7 +3,7 @@
   "name": "Vantage",
   "documentation": "https://github.com/gjbadros/hass-vantage",
   "requirements": [
-    "pyvantage==0.0.21",
+    "pyvantage==0.0.22",
     "colormath==3.0.0"
   ],
   "dependencies": [],
