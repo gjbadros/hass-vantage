@@ -157,10 +157,7 @@ def setup(hass, base_config):
                 answer.append(area.name)
         return answer
 
-    # Sort our devices into types
-    for output in vc.outputs:
-        _LOGGER.debug("output = %s", output)
-        area = vc._vid_to_area[output.area]
+    def should_keep_for_area(area):
         # list of all the areas from child up to root
         area_lineage = get_lineage_from_area(area)
         _LOGGER.debug("area = %s; lineage = %a", area.name, area_lineage)
@@ -188,6 +185,13 @@ def setup(hass, base_config):
                                   area.name, exclude_areas)
                     keep = False
                     break
+        return keep
+
+    # Sort our devices into types
+    for output in vc.outputs:
+        _LOGGER.debug("output = %s", output)
+        area = vc._vid_to_area[output.area]
+        keep = should_keep_for_area(area)
         if not keep:
             continue
         if is_excluded_name(output):
@@ -216,17 +220,23 @@ def setup(hass, base_config):
              not config.get(CONF_EXCLUDE_BUTTONS)) or
             (button.kind == 'contact' and
              not config.get(CONF_EXCLUDE_CONTACTS))):
-            if not is_excluded_name(button):
+            area = vc._vid_to_area[output.area]
+            keep = should_keep_for_area(area)
+            if keep and not is_excluded_name(button):
                 hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
 
     for sensor in vc.sensors:
-        if not is_excluded_name(sensor):
+        area = vc._vid_to_area[sensor.area]
+        keep = should_keep_for_area(area)
+        if keep and not is_excluded_name(sensor):
             hass.data[VANTAGE_DEVICES]['sensor'].append((sensor._area, sensor))
 
     # and so are keypads.  Their value is the name of the last button pressed
     if not config.get(CONF_EXCLUDE_KEYPADS):
         for keypad in vc.keypads:
-            hass.data[VANTAGE_DEVICES]['sensor'].append((None, keypad))
+            area = vc._vid_to_area[keypad.area]
+            if should_keep_for_area(area):
+                hass.data[VANTAGE_DEVICES]['sensor'].append((None, keypad))
 
     for component in ('light', 'cover', 'sensor', 'switch'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
