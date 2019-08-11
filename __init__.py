@@ -163,7 +163,7 @@ def setup(hass, base_config):
 
     def should_keep_for_area_vid(area_vid):
         area = vc._vid_to_area.get(area_vid)
-        if area_vid <= 0 or not area:
+        if not area:
             # no area, then we omit this if only_areas was specified,
             # and include it (since it can't match an exclude_areas)
             # otherwise
