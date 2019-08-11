@@ -157,6 +157,15 @@ def setup(hass, base_config):
                 answer.append(area.name)
         return answer
 
+    def should_keep_for_area_vid(area_vid):
+        area = vc._vid_to_area.get(area_vid)
+        if not area:
+            # no area, then we omit this if only_areas was specified,
+            # and include it (since it can't match an exclude_areas)
+            # otherwise
+            return not only_areas
+        return should_keep_for_area(area)
+
     def should_keep_for_area(area):
         # list of all the areas from child up to root
         area_lineage = get_lineage_from_area(area)
@@ -220,22 +229,20 @@ def setup(hass, base_config):
              not config.get(CONF_EXCLUDE_BUTTONS)) or
             (button.kind == 'contact' and
              not config.get(CONF_EXCLUDE_CONTACTS))):
-            area = vc._vid_to_area[output.area]
-            keep = should_keep_for_area(area)
-            if keep and not is_excluded_name(button):
+            if ((should_keep_for_area_vid(button.area) and
+                 not is_excluded_name(button))):
                 hass.data[VANTAGE_DEVICES]['sensor'].append((None, button))
 
     for sensor in vc.sensors:
-        area = vc._vid_to_area[sensor.area]
-        keep = should_keep_for_area(area)
-        if keep and not is_excluded_name(sensor):
+        if ((should_keep_for_area_vid(sensor.area) and
+             not is_excluded_name(sensor))):
             hass.data[VANTAGE_DEVICES]['sensor'].append((sensor._area, sensor))
 
     # and so are keypads.  Their value is the name of the last button pressed
     if not config.get(CONF_EXCLUDE_KEYPADS):
         for keypad in vc.keypads:
-            area = vc._vid_to_area[keypad.area]
-            if should_keep_for_area(area):
+            if ((should_keep_for_area_vid(keypad.area) and
+                 not is_excluded_name(keypad))):
                 hass.data[VANTAGE_DEVICES]['sensor'].append((None, keypad))
 
     for component in ('light', 'cover', 'sensor', 'switch'):
