@@ -27,6 +27,8 @@ CONF_EXCLUDE_AREAS = 'exclude_areas'
 CONF_EXCLUDE_BUTTONS = 'exclude_buttons'
 CONF_EXCLUDE_CONTACTS = 'exclude_contacts'
 CONF_EXCLUDE_KEYPADS = 'exclude_keypads'
+CONF_EXCLUDE_VARIABLES = 'exclude_variables'
+CONF_INCLUDE_UNDERSCORE_VARIABLES = 'include_underscore_variables'
 CONF_EXCLUDE_NAME_SUBSTRING = 'exclude_name_substring'
 CONF_NAME_MAPPINGS = 'name_mappings'
 CONF_AREA = 'area'
@@ -49,6 +51,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXCLUDE_BUTTONS): cv.boolean,
         vol.Optional(CONF_EXCLUDE_CONTACTS): cv.boolean,
         vol.Optional(CONF_EXCLUDE_KEYPADS): cv.boolean,
+        vol.Optional(CONF_EXCLUDE_VARIABLES): cv.boolean,
+        vol.Optional(CONF_INCLUDE_UNDERSCORE_VARIABLES): cv.boolean,
         vol.Optional(CONF_DISABLE_CACHE): cv.boolean,  # FIXME
         vol.Optional(CONF_NAME_MAPPINGS): NAME_MAPPINGS_SCHEMA
     })
@@ -219,9 +223,12 @@ def setup(hass, base_config):
                           output._vid, area.name)
             hass.data[VANTAGE_DEVICES]['light'].append((area.name, output))
 
-    for var in vc.variables:
-        if not is_excluded_name(var):
-            hass.data[VANTAGE_DEVICES]['sensor'].append((None, var))
+    if not config.get(CONF_EXCLUDE_VARIABLES):
+        for var in vc.variables:
+            if not is_excluded_name(var):
+                if ((config.get(CONF_INCLUDE_UNDERSCORE_VARIABLES) or
+                     not var.name.startswith("_"))):
+                    hass.data[VANTAGE_DEVICES]['sensor'].append((None, var))
 
     # buttons and dry contacts are are sensors too:
     # Their value is the name of the last action on them
