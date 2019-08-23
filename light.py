@@ -80,10 +80,6 @@ class VantageLight(VantageDevice, Light):
         self._prev_brightness = None
         VantageDevice.__init__(self, area_name, vantage_device, controller)
         vantage_device.set_ramp_sec(1, 1, 1)
-        # _dirty_properties are ones that are changed by set_state when
-        # the brightness level was zero (so the updated value is an implicit
-        # argument later when turn_on is called for the light)
-        self._dirty_properties = set()
 
     @property
     def supported_features(self):
@@ -140,6 +136,10 @@ class VantageLight(VantageDevice, Light):
         hs = color_RGB_to_hs(*rgb)
         return hs  # self._vantage_device.hs
 
+    def _set_level(self, brightness):
+        """Set the level, including other dirty properties."""
+        self._vantage_device.level = to_vantage_level(brightness)
+
     def turn_on(self, **kwargs):
         if ATTR_BRIGHTNESS in kwargs and self._vantage_device.is_dimmable:
             brightness = kwargs[ATTR_BRIGHTNESS]
@@ -155,27 +155,16 @@ class VantageLight(VantageDevice, Light):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self._vantage_device.is_dimmable:
             brightness = kwargs[ATTR_BRIGHTNESS]
-            self._vantage_device.level = to_vantage_level(brightness)
-        if (ATTR_RGB_COLOR in kwargs or
-            ATTR_RGB_COLOR in self._dirty_properties):
+            self._set_level(brightness)
+        if ATTR_RGB_COLOR in kwargs:
             _LOGGER.debug("set via ATTR_RGB_COLOR")
             self._vantage_device.rgb = kwargs[ATTR_RGB_COLOR]
-            if self._vantage_device.level == 0:
-                self._dirty_properties.add(ATTR_RGB_COLOR)
-            else:
-                self._dirty_properties.discard(ATTR_RGB_COLOR)
-        elif (ATTR_HS_COLOR in kwargs or
-              ATTR_HS_COLOR in self._dirty_properties):
+        elif ATTR_HS_COLOR in kwargs:
             _LOGGER.debug("set via ATTR_HS_COLOR")
             hs_color = kwargs[ATTR_HS_COLOR]
             rgb = color_hs_to_RGB(*hs_color)
             self._vantage_device.rgb = [*rgb]
-            if self._vantage_device.level == 0:
-                self._dirty_properties.add(ATTR_HS_COLOR)
-            else:
-                self._dirty_properties.discard(ATTR_HS_COLOR)
-        elif (ATTR_COLOR_TEMP in kwargs
-              or ATTR_COLOR_TEMP in self._dirty_properties):
+        elif ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug("set via ATTR_COLOR_TEMP - %s",
                           kwargs[ATTR_COLOR_TEMP])
             # Color temp in HA is in mireds:
@@ -192,10 +181,6 @@ class VantageLight(VantageDevice, Light):
                 rgb = self.color_temperature_to_dw_27k41k(kelvin)
                 self._vantage_device.rgb = [*rgb]
             self._vantage_device.color_temp = kelvin
-            if self._vantage_device.level == 0:
-                self._dirty_properties.add(ATTR_COLOR_TEMP)
-            else:
-                self._dirty_properties.discard(ATTR_COLOR_TEMP)
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
