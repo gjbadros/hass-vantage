@@ -40,7 +40,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devs = []
 
     def handle_set_state(call):
-        entity_ids = extract_entity_ids(hass, call)
+        entity_ids = extract_entity_ids(hass, call, True)
+        _LOGGER.info("vantage_set_state: got entity_ids = %s",  entity_ids)
         if entity_ids:
             entities = [
                 entity
