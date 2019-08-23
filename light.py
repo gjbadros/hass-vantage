@@ -163,7 +163,7 @@ class VantageLight(VantageDevice, Light):
             if self._vantage_device.level == 0:
                 self._dirty_properties.add(ATTR_RGB_COLOR)
             else:
-                self._dirty_properties.remove(ATTR_RGB_COLOR)
+                self._dirty_properties.discard(ATTR_RGB_COLOR)
         elif (ATTR_HS_COLOR in kwargs or
               ATTR_HS_COLOR in self._dirty_properties):
             _LOGGER.debug("set via ATTR_HS_COLOR")
@@ -173,7 +173,7 @@ class VantageLight(VantageDevice, Light):
             if self._vantage_device.level == 0:
                 self._dirty_properties.add(ATTR_HS_COLOR)
             else:
-                self._dirty_properties.remove(ATTR_HS_COLOR)
+                self._dirty_properties.discard(ATTR_HS_COLOR)
         elif (ATTR_COLOR_TEMP in kwargs
               or ATTR_COLOR_TEMP in self._dirty_properties):
             _LOGGER.debug("set via ATTR_COLOR_TEMP - %s",
@@ -195,7 +195,7 @@ class VantageLight(VantageDevice, Light):
             if self._vantage_device.level == 0:
                 self._dirty_properties.add(ATTR_COLOR_TEMP)
             else:
-                self._dirty_properties.remove(ATTR_COLOR_TEMP)
+                self._dirty_properties.discard(ATTR_COLOR_TEMP)
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
