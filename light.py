@@ -48,6 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if entity.entity_id in entity_ids
             ]
             for light in entities:
+                _LOGGER.info("light.set_state(%s) to %s", light, call.data)
                 light.set_state(**call.data)
 
     for (area_name, device) in hass.data[VANTAGE_DEVICES]['light']:
