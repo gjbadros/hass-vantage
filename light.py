@@ -39,8 +39,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def handle_set_state(call):
         entity_ids = extract_entity_ids(hass, call)
-        for light in entity_ids:
-            light.set_state(**call.data)
+        if entity_ids:
+            entities = [
+                entity
+                for entity in self.entities.values()
+                if entity.entity_id in entity_ids
+            ]
+            for light in entities:
+                light.set_state(**call.data)
 
     devs = []
     for (area_name, device) in hass.data[VANTAGE_DEVICES]['light']:
@@ -137,7 +143,7 @@ class VantageLight(VantageDevice, Light):
             brightness = self._prev_brightness
         self._prev_brightness = brightness
         kwargs[ATTR_BRIGHTNESS] = brightness
-        self.set_state(kwargs)
+        self.set_state(**kwargs)
 
     def set_state(self, **kwargs):
         """Turn the light on."""
