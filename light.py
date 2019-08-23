@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if entity_ids:
             entities = [
                 entity
-                for entity in devs.values()
+                for entity in devs
                 if entity.entity_id in entity_ids
             ]
             for light in entities:
