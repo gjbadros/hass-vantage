@@ -37,18 +37,19 @@ DEPENDENCIES = ['vantage']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vantage lights."""
 
+    devs = []
+
     def handle_set_state(call):
         entity_ids = extract_entity_ids(hass, call)
         if entity_ids:
             entities = [
                 entity
-                for entity in self.entities.values()
+                for entity in devs.values()
                 if entity.entity_id in entity_ids
             ]
             for light in entities:
                 light.set_state(**call.data)
 
-    devs = []
     for (area_name, device) in hass.data[VANTAGE_DEVICES]['light']:
         dev = VantageLight(area_name, device, hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
