@@ -20,8 +20,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
     color_temperature_kelvin_to_mired)
 
-from homeassistant.service.helpers import (
-    extract_entity_ids)
+from homeassistant.helpers.service import extract_entity_ids
 
 from ..vantage import (
     VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
