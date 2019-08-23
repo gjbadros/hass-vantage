@@ -7,18 +7,29 @@ https://home-assistant.io/components/light.vantage/
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
+    ATTR_RGB_COLOR, ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    LIGHT_TURN_ON_SCHEMA,
+    DOMAIN,
+    Light)
 
 from homeassistant.util.color import (
     color_hs_to_RGB, color_temperature_to_rgb, color_RGB_to_hs,
     color_temperature_mired_to_kelvin,
     color_temperature_kelvin_to_mired)
 
+from homeassistant.service.helpers import (
+    extract_entity_ids)
+
 from ..vantage import (
     VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
 
 _LOGGER = logging.getLogger(__name__)
+
+VANTAGE_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA
+SERVICE_VANTAGE_SET_STATE = "vantage_set_state"
 
 DEPENDENCIES = ['vantage']
 
@@ -26,12 +37,21 @@ DEPENDENCIES = ['vantage']
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vantage lights."""
+
+    def handle_set_state(call):
+        entity_ids = extract_entity_ids(hass, call)
+        for light in entity_ids:
+            light.set_state(**call.data)
+
     devs = []
     for (area_name, device) in hass.data[VANTAGE_DEVICES]['light']:
         dev = VantageLight(area_name, device, hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 
     add_devices(devs, True)
+    hass.services.register(DOMAIN, SERVICE_VANTAGE_SET_STATE,
+                           handle_set_state,
+                           schema=VANTAGE_SET_STATE_SCHEMA)
     return True
 
 
@@ -110,7 +130,6 @@ class VantageLight(VantageDevice, Light):
         return hs  # self._vantage_device.hs
 
     def turn_on(self, **kwargs):
-        """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self._vantage_device.is_dimmable:
             brightness = kwargs[ATTR_BRIGHTNESS]
         elif self._prev_brightness == 0:
@@ -118,7 +137,14 @@ class VantageLight(VantageDevice, Light):
         else:
             brightness = self._prev_brightness
         self._prev_brightness = brightness
-        self._vantage_device.level = to_vantage_level(brightness)
+        kwargs[ATTR_BRIGHTNESS] = brightness
+        self.set_state(kwargs)
+
+    def set_state(self, **kwargs):
+        """Turn the light on."""
+        if ATTR_BRIGHTNESS in kwargs and self._vantage_device.is_dimmable:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            self._vantage_device.level = to_vantage_level(brightness)
         if ATTR_RGB_COLOR in kwargs:
             _LOGGER.debug("set via ATTR_RGB_COLOR")
             self._vantage_device.rgb = kwargs[ATTR_RGB_COLOR]
