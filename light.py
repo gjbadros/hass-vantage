@@ -153,7 +153,9 @@ class VantageLight(VantageDevice, Light):
 
     def set_state(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs and self._vantage_device.is_dimmable:
+        if ATTR_BRIGHTNESS in kwargs:
+            # TODO: is_dimmable test fails for GROUP load types
+            # and self._vantage_device.is_dimmable:
             brightness = kwargs[ATTR_BRIGHTNESS]
             self._set_level(brightness)
         if ATTR_RGB_COLOR in kwargs:
