@@ -125,9 +125,9 @@ class VantageLight(VantageDevice, Light):
             red = 255 - blue
         max_color = max(red, blue)
         ratio = 255/max_color * self.brightness/255
-        answer = (red*ratio, 0, blue*ratio)
+        answer = (red, 0, blue)
         _LOGGER.debug("using %s for color temp %s", answer, kelvin)
-        return (red*ratio, 0, blue*ratio)
+        return answer
 
     @property
     def hs_color(self):
