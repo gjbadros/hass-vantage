@@ -14,7 +14,7 @@ or github at https://github.com/gjbadros/pyvantage).
 
 Put these files in .homeassistant/custom_components/vantage
 
-And configure using a config like:
+And add something like the following to configuration.yaml:
 
 ```
 vantage:
@@ -25,4 +25,13 @@ vantage:
   exclude_areas: "SPARE RELAYS"
 ```
 
+And add the following to secrets.yaml:
+
+vantage_username: [my_username]
+vantage_password: [my_password]
+
 and then restart home assistant.
+
+Note: if your Vantage system is not set up with a username and password you can
+elide the username: and password: lines in the configuration.yaml file, and skip
+setting up secrets.yaml.  Or, just add a password to your Vantage!
