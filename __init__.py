@@ -131,11 +131,15 @@ def setup(hass, base_config):
     if not (config_name_mappings is None):
         name_mappings = mappings_from(config_name_mappings)
 
-    _LOGGER.info("Username is %s", CONF_USERNAME)
+    username = None
+    password = None
+    if CONF_USERNAME in config:
+        username = config[CONF_USERNAME]
+        password = config[CONF_PASSWORD]
+        _LOGGER.info("Username is %s", username)
+
     hass.data[VANTAGE_CONTROLLER] = Vantage(
-        config[CONF_HOST],
-        config[CONF_USERNAME] if CONF_USERNAME in config else None,
-        config[CONF_PASSWORD] if CONF_PASSWORD in config else None,
+        config[CONF_HOST], username, password,
         only_areas, exclude_areas, 3001, 2001,
         name_mappings)
 
