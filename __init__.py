@@ -43,8 +43,8 @@ NAME_MAPPINGS_SCHEMA = vol.All([NAME_MAPPING_SCHEMA])
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_ONLY_AREAS): cv.string,
         vol.Optional(CONF_EXCLUDE_AREAS): cv.string,
         vol.Optional(CONF_EXCLUDE_NAME_SUBSTRING): cv.string,
@@ -126,10 +126,20 @@ def setup(hass, base_config):
     if exclude_name_substring:
         set_exclude_name_substring = set(exclude_name_substring.split(","))
 
-    name_mappings = mappings_from(config.get(CONF_NAME_MAPPINGS))
+    config_name_mappings = config.get(CONF_NAME_MAPPINGS)
+    name_mappings = None
+    if not (config_name_mappings is None):
+        name_mappings = mappings_from(config_name_mappings)
+
+    username = None
+    password = None
+    if CONF_USERNAME in config:
+        username = config[CONF_USERNAME]
+        password = config[CONF_PASSWORD]
+        _LOGGER.info("Username is %s", username)
 
     hass.data[VANTAGE_CONTROLLER] = Vantage(
-        config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD],
+        config[CONF_HOST], username, password,
         only_areas, exclude_areas, 3001, 2001,
         name_mappings)
 
