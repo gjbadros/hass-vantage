@@ -1,15 +1,12 @@
-* DMX lights not reading RGB values right
-* DMX lights not setting to color_temp right
-* Fix capitalizations of hass-make-groups.pl
+* Custom fluxer's use of vantage_set_state and lifx_set_state are not working reliably to change color when lights are off.
 
+* Make follow async style: https://developers.home-assistant.io/docs/en/asyncio_working_with_async.html
 
-* extra variables and tasks from vantage config
+* Switch to using proper yaml for exclude_name_substring, exclude_areas, only_areas.
 
-* support set_variable (by name) service
+* Document priority of exclude_areas vs. only_areas.
 
-* support call_task, call_task_vid services; can I expose buttons for calling the tasks in the UI?
+* add only_name_substring (or include_name_string) to exclude everything else by default.
 
-* make circadiant work for the Ketra lights, too.
-
-* test DMX on the ketra lights via vantage directly instead of using driver; get DMX hub working
+* Switch to an Integration Configuration style (instead of all in configuration.yaml): https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html
 

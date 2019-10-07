@@ -125,6 +125,7 @@ def setup(hass, base_config):
         exclude_areas = set(exclude_areas.split(","))
     if exclude_name_substring:
         set_exclude_name_substring = set(exclude_name_substring.split(","))
+        _LOGGER.debug("excluded_names = %s", set_exclude_name_substring)
 
     config_name_mappings = config.get(CONF_NAME_MAPPINGS)
     name_mappings = None
@@ -153,7 +154,7 @@ def setup(hass, base_config):
         for ns in set_exclude_name_substring:
             if ns in entity.name:
                 _LOGGER.debug(
-                    "skipping %s because exclude_name_substring has %s",
+                    "skipping %s because exclude_name_substring has '%s'",
                     entity, ns)
                 return True
         return False
