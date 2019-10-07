@@ -6,6 +6,7 @@ https://home-assistant.io/components/vantage/
 """
 import asyncio
 import logging
+import functools
 
 import voluptuous as vol
 
@@ -71,11 +72,11 @@ def mappings_from(nm):
     return answer
 
 
-def setup(hass, base_config):
+async def async_setup(hass, base_config):
     """Set up the Vantage component."""
     from pyvantage import Vantage
 
-    def handle_set_variable_vid(call):
+    async def async_handle_set_variable_vid(call):
         vid = call.data.get('vid')
         if vid is None:
             raise Exception("Missing vid on vantage.set_variable_vid")
@@ -83,9 +84,11 @@ def setup(hass, base_config):
         if value is None:
             raise Exception("Missing value on vantage.set_variable_vid")
         _LOGGER.debug("Called SET_VARIABLE_VID service: %s", call)
-        hass.data[VANTAGE_CONTROLLER].set_variable_vid(vid, value)
+        fn = functools.partial(
+            hass.data[VANTAGE_CONTROLLER].set_variable_vid, vid, value)
+        await hass.async_add_executor_job(fn)
 
-    def handle_set_variable(call):
+    async def async_handle_set_variable(call):
         name = call.data.get('name')
         if name is None:
             raise Exception("Missing name on vantage.set_variable")
@@ -93,21 +96,27 @@ def setup(hass, base_config):
         if value is None:
             raise Exception("Missing value on vantage.set_variable")
         _LOGGER.debug("Called SET_VARIABLE service: %s", str(call))
-        hass.data[VANTAGE_CONTROLLER].set_variable(name, value)
+        fn = functools.partial(
+            hass.data[VANTAGE_CONTROLLER].set_variable, name, value)
+        await hass.async_add_executor_job(fn)
 
-    def handle_call_task_vid(call):
+    async def async_handle_call_task_vid(call):
         vid = call.data.get('vid')
         if vid is None:
             raise Exception("Missing vid on vantage.call_task_vid")
         _LOGGER.debug("Called CALL_TASK_VID service: %s", str(call))
-        hass.data[VANTAGE_CONTROLLER].call_task_vid(vid)
+        fn = functools.partial(
+            hass.data[VANTAGE_CONTROLLER].call_task_vid, vid)
+        await hass.async_add_executor_job(fn)
 
-    def handle_call_task(call):
+    async def async_handle_call_task(call):
         name = call.data.get('name')
         if name is None:
             raise Exception("Missing name on vantage.call_task")
         _LOGGER.debug("Called CALL_TASK service: %s", str(call))
-        hass.data[VANTAGE_CONTROLLER].call_task(name)
+        fn = functools.partial(
+            hass.data[VANTAGE_CONTROLLER].call_task, name)
+        await hass.async_add_executor_job(fn)
 
     hass.data[VANTAGE_CONTROLLER] = None
     hass.data[VANTAGE_DEVICES] = {
@@ -146,8 +155,9 @@ def setup(hass, base_config):
 
     vc = hass.data[VANTAGE_CONTROLLER]
 
-    vc.load_xml_db(config.get(CONF_DISABLE_CACHE, False))
-    vc.connect()
+    await hass.async_add_executor_job(functools.partial(
+        vc.load_xml_db, config.get(CONF_DISABLE_CACHE, False)))
+    await hass.async_add_executor_job(vc.connect)
     _LOGGER.debug("Connected to main repeater at %s", config[CONF_HOST])
 
     def is_excluded_name(entity):
@@ -265,12 +275,17 @@ def setup(hass, base_config):
                 hass.data[VANTAGE_DEVICES]['sensor'].append((None, keypad))
 
     for component in ('light', 'cover', 'sensor', 'switch'):
-        discovery.load_platform(hass, component, DOMAIN, None, base_config)
+        await discovery.async_load_platform(hass, component, DOMAIN,
+                                            None, base_config)
 
-    hass.services.register(DOMAIN, 'set_variable_vid', handle_set_variable_vid)
-    hass.services.register(DOMAIN, 'call_task_vid', handle_call_task_vid)
-    hass.services.register(DOMAIN, 'set_variable', handle_set_variable)
-    hass.services.register(DOMAIN, 'call_task', handle_call_task)
+    hass.services.async_register(DOMAIN, 'set_variable_vid',
+                                 async_handle_set_variable_vid)
+    hass.services.async_register(DOMAIN, 'call_task_vid',
+                                 async_handle_call_task_vid)
+    hass.services.async_register(DOMAIN, 'set_variable',
+                                 async_handle_set_variable)
+    hass.services.async_register(DOMAIN, 'call_task',
+                                 async_handle_call_task)
     return True
 
 

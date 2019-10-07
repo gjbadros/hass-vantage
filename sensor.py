@@ -21,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['vantage']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Setup the sensor platform."""
     devs = []
     for (area_name, device) in hass.data[VANTAGE_DEVICES]['sensor']:
@@ -35,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                 hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 
-    add_devices(devs, True)
+    async_add_devices(devs, True)
     return True
 
 
@@ -83,7 +84,7 @@ class VantageSensor(VantageDevice, RestoreEntity):
         """Return the state of the sensor."""
         return self._vantage_device.value
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for the sensor.
 
         This is the only method that should fetch new data for Home Assistant.
@@ -107,7 +108,7 @@ class VantageSensor(VantageDevice, RestoreEntity):
 # TODO: this maybe could be just returning true for should_poll
 class VantagePollingSensor(VantageSensor):
     """Representation of a Vantage sensor that needs polling."""
-    def update(self):
+    async def async_update(self):
         """Fetch new data."""
         self._vantage_device.update()
 

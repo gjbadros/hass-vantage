@@ -19,14 +19,14 @@ DEPENDENCIES = ['vantage']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Vantage shades."""
     devs = []
     for (area_name, device) in hass.data[VANTAGE_DEVICES]['cover']:
         dev = VantageCover(area_name, device, hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 
-    add_devices(devs, True)
+    async_add_devices(devs, True)
     return True
 
 
@@ -70,7 +70,7 @@ class VantageCover(VantageDevice, CoverDevice):
             position = kwargs[ATTR_POSITION]
             self._vantage_device.level = position
 
-    def update(self):
+    async def async_update(self):
         """Call when forcing a refresh of the device."""
         # Reading the property (rather than last_level()) fetches value
         level = self._vantage_device.level

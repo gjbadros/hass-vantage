@@ -16,14 +16,14 @@ DEPENDENCIES = ['vantage']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Vantage lights."""
     devs = []
     for (area_name, device) in hass.data[VANTAGE_DEVICES]['switch']:
         dev = VantageSwitch(area_name, device, hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 
-    add_devices(devs, True)
+    async_add_devices(devs, True)
     return True
 
 
@@ -65,7 +65,7 @@ class VantageSwitch(VantageDevice, SwitchDevice):
         """Return true if device is on."""
         return self._vantage_device.last_level() > 0
 
-    def update(self):
+    async def async_update(self):
         """Call when forcing a refresh of the device."""
         if self._prev_brightness is None:
             self._prev_brightness = to_hass_level(self._vantage_device.level)
