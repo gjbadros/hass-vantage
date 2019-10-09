@@ -140,7 +140,7 @@ async def async_setup(hass, base_config):
 
     config_name_mappings = config.get(CONF_NAME_MAPPINGS)
     name_mappings = None
-    if not (config_name_mappings is None):
+    if not config_name_mappings is None:
         name_mappings = mappings_from(config_name_mappings)
 
     username = None

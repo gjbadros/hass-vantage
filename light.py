@@ -128,8 +128,8 @@ class VantageLight(VantageDevice, Light):
             frac = (kelvin - 2700) / (4100 - 2700)
             blue = frac * 255
             red = 255 - blue
-        max_color = max(red, blue)
-        ratio = 255 / max_color * self.brightness / 255
+        # max_color = max(red, blue)
+        # ratio = 255 / max_color * self.brightness / 255
         answer = (red, 0, blue)
         _LOGGER.debug("using %s for color temp %s", answer, kelvin)
         return answer
