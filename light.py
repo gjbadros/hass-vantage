@@ -7,35 +7,40 @@ https://home-assistant.io/components/light.vantage/
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
-    ATTR_RGB_COLOR, ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_RGB_COLOR,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     LIGHT_TURN_ON_SCHEMA,
     DOMAIN,
-    Light)
+    Light,
+)
 
 from homeassistant.util.color import (
-    color_hs_to_RGB, color_temperature_to_rgb, color_RGB_to_hs,
+    color_hs_to_RGB,
+    color_temperature_to_rgb,
+    color_RGB_to_hs,
     color_temperature_mired_to_kelvin,
-    color_temperature_kelvin_to_mired)
+    color_temperature_kelvin_to_mired,
+)
 
 from homeassistant.helpers.service import extract_entity_ids
 
-from ..vantage import (
-    VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
+from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
 
 VANTAGE_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA
 SERVICE_VANTAGE_SET_STATE = "vantage_set_state"
 
-DEPENDENCIES = ['vantage']
+DEPENDENCIES = ["vantage"]
 
 
 # pylint: disable=unused-argument
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Vantage lights."""
 
     devs = []
@@ -43,23 +48,22 @@ async def async_setup_platform(hass, config, async_add_devices,
     async def async_handle_set_state(call):
         entity_ids = extract_entity_ids(hass, call, True)
         if entity_ids:
-            entities = [
-                entity
-                for entity in devs
-                if entity.entity_id in entity_ids
-            ]
+            entities = [entity for entity in devs if entity.entity_id in entity_ids]
             for light in entities:
                 _LOGGER.info("light.set_state(%s) to %s", light, call.data)
                 light.set_state(**call.data)
 
-    for (area_name, device) in hass.data[VANTAGE_DEVICES]['light']:
+    for (area_name, device) in hass.data[VANTAGE_DEVICES]["light"]:
         dev = VantageLight(area_name, device, hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 
     async_add_devices(devs, True)
-    hass.services.async_register(DOMAIN, SERVICE_VANTAGE_SET_STATE,
-                                 async_handle_set_state,
-                                 schema=VANTAGE_SET_STATE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_VANTAGE_SET_STATE,
+        async_handle_set_state,
+        schema=VANTAGE_SET_STATE_SCHEMA,
+    )
     return True
 
 
@@ -85,11 +89,11 @@ class VantageLight(VantageDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return (SUPPORT_BRIGHTNESS |
-                (SUPPORT_COLOR_TEMP
-                 if self._vantage_device.support_color_temp else 0) |
-                (SUPPORT_COLOR
-                 if self._vantage_device.support_color else 0))
+        return (
+            SUPPORT_BRIGHTNESS
+            | (SUPPORT_COLOR_TEMP if self._vantage_device.support_color_temp else 0)
+            | (SUPPORT_COLOR if self._vantage_device.support_color else 0)
+        )
 
     @property
     def brightness(self):
@@ -121,11 +125,11 @@ class VantageLight(VantageDevice, Light):
             red = 0
             blue = 255
         else:
-            frac = (kelvin-2700) / (4100-2700)
-            blue = frac*255
+            frac = (kelvin - 2700) / (4100 - 2700)
+            blue = frac * 255
             red = 255 - blue
         max_color = max(red, blue)
-        ratio = 255/max_color * self.brightness/255
+        ratio = 255 / max_color * self.brightness / 255
         answer = (red, 0, blue)
         _LOGGER.debug("using %s for color temp %s", answer, kelvin)
         return answer
@@ -168,13 +172,13 @@ class VantageLight(VantageDevice, Light):
             rgb = color_hs_to_RGB(*hs_color)
             self._vantage_device.rgb = [*rgb]
         elif ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.debug("%s set via ATTR_COLOR_TEMP - %s", self,
-                          kwargs[ATTR_COLOR_TEMP])
+            _LOGGER.debug(
+                "%s set via ATTR_COLOR_TEMP - %s", self, kwargs[ATTR_COLOR_TEMP]
+            )
             # Color temp in HA is in mireds:
             # https://en.wikipedia.org/wiki/Mired
             # M = 1000000/KELVIN_TEMP
-            kelvin = int(color_temperature_mired_to_kelvin(
-                kwargs[ATTR_COLOR_TEMP]))
+            kelvin = int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
             _LOGGER.debug("%s vantage color temp kelvin = %s", self, kelvin)
             if self._vantage_device._dmx_color:
                 # do conversion

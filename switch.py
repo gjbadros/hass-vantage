@@ -7,19 +7,18 @@ https://home-assistant.io/components/light.vantage/
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from ..vantage import (
-    VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
+from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['vantage']
+DEPENDENCIES = ["vantage"]
 
 
 # pylint: disable=unused-argument
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Vantage lights."""
     devs = []
-    for (area_name, device) in hass.data[VANTAGE_DEVICES]['switch']:
+    for (area_name, device) in hass.data[VANTAGE_DEVICES]["switch"]:
         dev = VantageSwitch(area_name, device, hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 

@@ -7,22 +7,25 @@ https://home-assistant.io/components/cover.vantage/
 import logging
 
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE,
-    SUPPORT_STOP, SUPPORT_SET_POSITION,
-    ATTR_POSITION)
-from ..vantage import (
-    VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
+    CoverDevice,
+    SUPPORT_OPEN,
+    SUPPORT_CLOSE,
+    SUPPORT_STOP,
+    SUPPORT_SET_POSITION,
+    ATTR_POSITION,
+)
+from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['vantage']
+DEPENDENCIES = ["vantage"]
 
 
 # pylint: disable=unused-argument
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Vantage shades."""
     devs = []
-    for (area_name, device) in hass.data[VANTAGE_DEVICES]['cover']:
+    for (area_name, device) in hass.data[VANTAGE_DEVICES]["cover"]:
         dev = VantageCover(area_name, device, hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 
@@ -36,8 +39,7 @@ class VantageCover(VantageDevice, CoverDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return (SUPPORT_OPEN | SUPPORT_CLOSE |
-                SUPPORT_STOP | SUPPORT_SET_POSITION)
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
 
     @property
     def is_closed(self):
@@ -74,5 +76,4 @@ class VantageCover(VantageDevice, CoverDevice):
         """Call when forcing a refresh of the device."""
         # Reading the property (rather than last_level()) fetches value
         level = self._vantage_device.level
-        _LOGGER.debug("Vantage ID: %d updated to %f",
-                      self._vantage_device.id, level)
+        _LOGGER.debug("Vantage ID: %d updated to %f", self._vantage_device.id, level)

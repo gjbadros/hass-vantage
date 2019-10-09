@@ -13,27 +13,23 @@ import logging
 # to use hass state to keep track of them between reboots
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from ..vantage import (
-    VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER)
+from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['vantage']
+DEPENDENCIES = ["vantage"]
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the sensor platform."""
     devs = []
-    for (area_name, device) in hass.data[VANTAGE_DEVICES]['sensor']:
+    for (area_name, device) in hass.data[VANTAGE_DEVICES]["sensor"]:
         if not area_name:
             area_name = ""
         if device.needs_poll():
-            dev = VantagePollingSensor(area_name, device,
-                                       hass.data[VANTAGE_CONTROLLER])
+            dev = VantagePollingSensor(area_name, device, hass.data[VANTAGE_CONTROLLER])
         else:
-            dev = VantageSensor(area_name, device,
-                                hass.data[VANTAGE_CONTROLLER])
+            dev = VantageSensor(area_name, device, hass.data[VANTAGE_CONTROLLER])
         devs.append(dev)
 
     async_add_devices(devs, True)
@@ -49,20 +45,21 @@ class VantageSensor(VantageDevice, RestoreEntity):
         self._unit_of_measurement = None
         self._device_class = None
         k = self._vantage_device.kind
-        if k == 'temperature':
-            self._unit_of_measurement = '°C'
-            self._device_class = 'temperature'
-        if k == 'power':
-            self._unit_of_measurement = 'watt'
-            self._device_class = 'power'
-        if k == 'current':
-            self._unit_of_measurement = 'amp'
-            self._device_class = 'power'
-        if k == 'light':
-            self._unit_of_measurement = 'lm'
-            self._device_class = 'illuminance'
-        _LOGGER.debug("Created sensor (%s): %s", vantage_device.kind,
-                      vantage_device.name)
+        if k == "temperature":
+            self._unit_of_measurement = "°C"
+            self._device_class = "temperature"
+        if k == "power":
+            self._unit_of_measurement = "watt"
+            self._device_class = "power"
+        if k == "current":
+            self._unit_of_measurement = "amp"
+            self._device_class = "power"
+        if k == "light":
+            self._unit_of_measurement = "lm"
+            self._device_class = "illuminance"
+        _LOGGER.debug(
+            "Created sensor (%s): %s", vantage_device.kind, vantage_device.name
+        )
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -108,6 +105,7 @@ class VantageSensor(VantageDevice, RestoreEntity):
 # TODO: this maybe could be just returning true for should_poll
 class VantagePollingSensor(VantageSensor):
     """Representation of a Vantage sensor that needs polling."""
+
     async def async_update(self):
         """Fetch new data."""
         self._vantage_device.update()
