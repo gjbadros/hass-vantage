@@ -10,10 +10,12 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
+    ATTR_TRANSITION,
     ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
+    SUPPORT_TRANSITION,
     LIGHT_TURN_ON_SCHEMA,
     DOMAIN,
     Light,
@@ -84,13 +86,13 @@ class VantageLight(VantageDevice, Light):
         """Initialize the light."""
         self._prev_brightness = None
         VantageDevice.__init__(self, area_name, vantage_device, controller)
-        vantage_device.set_ramp_sec(1, 1, 1)
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return (
             SUPPORT_BRIGHTNESS
+            | SUPPORT_TRANSITION
             | (SUPPORT_COLOR_TEMP if self._vantage_device.support_color_temp else 0)
             | (SUPPORT_COLOR if self._vantage_device.support_color else 0)
         )
@@ -158,6 +160,13 @@ class VantageLight(VantageDevice, Light):
 
     def set_state(self, **kwargs):
         """Turn the light on."""
+        if ATTR_TRANSITION in kwargs:
+            transition_time_in_s = kwargs[ATTR_TRANSITION]
+        else:
+            transition_time_in_s = 1
+        self._vantage_device.set_ramp_sec(transition_time_in_s,
+                                          transition_time_in_s,
+                                          transition_time_in_s)
         if ATTR_BRIGHTNESS in kwargs:
             # TODO: is_dimmable test fails for GROUP load types
             # and self._vantage_device.is_dimmable:
