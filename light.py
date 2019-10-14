@@ -158,20 +158,18 @@ class VantageLight(VantageDevice, Light):
         kwargs[ATTR_BRIGHTNESS] = brightness
         self.set_state(**kwargs)
 
-    def set_state(self, **kwargs):
-        """Turn the light on."""
+    def _set_ramp(self, **kwargs):
         if ATTR_TRANSITION in kwargs:
             transition_time_in_s = kwargs[ATTR_TRANSITION]
         else:
-            # It would be nicer if the default transition time was something
-            # more elegant like 1 second.  But Home Assistant doesn't provide a
-            # way of saying the transition time is zero -- it just elides it
-            # when you set it to zero.  So let's do exactly what Home Assistant
-            # asks for:
-            transition_time_in_s = 0
+            transition_time_in_s = 1
         self._vantage_device.set_ramp_sec(transition_time_in_s,
                                           transition_time_in_s,
                                           transition_time_in_s)
+
+    def set_state(self, **kwargs):
+        """Turn the light on."""
+        self._set_ramp(**kwargs)
         if ATTR_BRIGHTNESS in kwargs:
             # TODO: is_dimmable test fails for GROUP load types
             # and self._vantage_device.is_dimmable:
@@ -206,6 +204,7 @@ class VantageLight(VantageDevice, Light):
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
+        self._set_ramp(**kwargs)
         self._vantage_device.level = 0
         self.schedule_update_ha_state()
 
