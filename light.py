@@ -163,7 +163,12 @@ class VantageLight(VantageDevice, Light):
         if ATTR_TRANSITION in kwargs:
             transition_time_in_s = kwargs[ATTR_TRANSITION]
         else:
-            transition_time_in_s = 1
+            # It would be nicer if the default transition time was something
+            # more elegant like 1 second.  But Home Assistant doesn't provide a
+            # way of saying the transition time is zero -- it just elides it
+            # when you set it to zero.  So let's do exactly what Home Assistant
+            # asks for:
+            transition_time_in_s = 0
         self._vantage_device.set_ramp_sec(transition_time_in_s,
                                           transition_time_in_s,
                                           transition_time_in_s)
