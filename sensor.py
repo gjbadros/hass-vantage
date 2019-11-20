@@ -74,9 +74,10 @@ class VantageSensor(VantageDevice, RestoreEntity):
         _LOGGER.info("got state for %s = %s", self, state.state)
         self._vantage_device.set_initial_value(state.state)
         if self._vantage_device.kind == "button":
-            self._clicktracker = ButtonClickTracker(
-                self.hass, self._vantage_device, self._controller,
-                self.entity_id.replace("sensor.", "", 1))
+            self._clicktracker = ButtonClickTracker(self.hass,
+                                                    self._vantage_device,
+                                                    self._controller,
+                                                    self.entity_id)
 
     @property
     def assumed_state(self) -> bool:
