@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.core import Event
 
 DOMAIN = "vantage"
 
@@ -77,6 +78,23 @@ def mappings_from(nm):
     return answer
 
 
+def handle_dump_memory():
+    """Dump memory using muppy to look for a leak"""
+    from pympler import muppy, summary
+    from collections import Counter
+    import json
+
+    _LOGGER.warning("vantage.dump_memory started")
+    all_objects = muppy.get_objects()
+    sum1 = summary.summarize(all_objects)
+    summary.print_(sum1)
+    _LOGGER.warning("vantage.dump_memory summary done")
+    event_types = [e.event_type for e in all_objects if isinstance(e, Event)]
+    c = Counter(event_types)
+    _LOGGER.warning("event_types: %s", json.dumps(c.most_common()))
+    _LOGGER.warning("vantage.dump_memory completed")
+
+
 async def async_setup(hass, base_config):
     """Set up the Vantage component."""
     from pyvantage import Vantage
@@ -120,6 +138,9 @@ async def async_setup(hass, base_config):
         _LOGGER.debug("Called CALL_TASK service: %s", str(call))
         fn = functools.partial(hass.data[VANTAGE_CONTROLLER].call_task, name)
         await hass.async_add_executor_job(fn)
+
+    async def async_handle_dump_memory(call):
+        await hass.async_add_executor_job(handle_dump_memory)
 
     hass.data[VANTAGE_CONTROLLER] = None
     hass.data[VANTAGE_DEVICES] = {"light": [], "cover": [], "sensor": [], "switch": []}
@@ -297,6 +318,7 @@ async def async_setup(hass, base_config):
     hass.services.async_register(DOMAIN, "call_task_vid", async_handle_call_task_vid)
     hass.services.async_register(DOMAIN, "set_variable", async_handle_set_variable)
     hass.services.async_register(DOMAIN, "call_task", async_handle_call_task)
+    hass.services.async_register(DOMAIN, "dump_memory", async_handle_dump_memory)
     return True
 
 
