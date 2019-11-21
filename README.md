@@ -4,8 +4,8 @@ hass-vantage
 By Greg J. Badros <badros@gmail.com>
 
 For license information, see LICENSE -- Vantage systems control high voltage
-electricity, you risk shock, fire, or injury using this software.  Use this at
-your own risk!
+electricity, you risk shock, fire, injury or death using this software.  Use
+this at your own risk!
 
 This is a custom component for the Vantage Infusion whole-home lighting system
 for use with Home Assistant.
@@ -38,6 +38,7 @@ Setup
 I use the following script to setup pyvantage and the vantage custom component.
 You'll have to tweak it based on how you have Home Assistant set up.
 
+```
     # First download pyvantage and add it to homeassistant.  Installs pyvantage
     # in the current directory and assumes home-assistant is in
     # ./home-assistant:
@@ -54,7 +55,7 @@ You'll have to tweak it based on how you have Home Assistant set up.
     # If we want to edit pyvantage, we install it from a local mirror of the git
     # repo:
     cd ../pyvantage
-    pip install --editable .
+    pip3 install --editable .
 
     cd ../home-assistant
     script/setup
@@ -62,10 +63,10 @@ You'll have to tweak it based on how you have Home Assistant set up.
     # Now install the vantage custom component:
 
     cd ~/.homeassistant/custom_components
-    git clone https://github.com/colohan/hass-vantage.git
-    mv hass-vantage vantage
+    git clone https://github.com/colohan/hass-vantage.git vantage
     cd vantage
     git remote add upstream https://github.com/gjbadros/hass-vantage.git
+```
 
 
 And add something like the following to configuration.yaml:
@@ -81,8 +82,10 @@ vantage:
 
 And add the following to secrets.yaml:
 
+```
 vantage_username: [my_username]
 vantage_password: [my_password]
+```
 
 and then restart home assistant.
 
@@ -158,15 +161,30 @@ need unique names -- they all have a unique VID.
 
 This Vantage component attempts to generate unique names by concatenating the
 names of the levels of the object hierarchy in Vantage.  So a light in your
-second floor master bath might get called
-"light.second_floor_master_bath_vanity_light".  If you have two objects with the
-same name (very common with buttons, where multiple buttons may have similar
-names such as "On" and "Off"), this module will just add the VID to the end.
+second floor master bath might create an Entity called
+"light.second_floor_master_bath_vanity_light" with a friendly name of "Second
+Floor-Master Bath-Vanity Light" (the friendly name is used by Lovelace in
+displaying objects, the Entity name is what you use when you are coding up
+automations).  If you have two objects with the same name (very common with
+buttons, where multiple buttons may have similar names such as "On" and "Off"),
+this module will just add the VID to the end.
 
-These names are very long.  If you want shorter names, you can either go through
-and rename all the Entities in Home Assistant, or you can rename your objects in
-Vantage before syncing to Home Assistant (say, by renaming your "Second Floor"
-to be "2F" and your "Master Bath" to be "MBath" or the like).
+These names are very long.  If you want shorter Entity names, you can either go
+through and rename all the Entities in Home Assistant, or you can rename your
+objects in Vantage before syncing to Home Assistant (say, by renaming your
+"Second Floor" to be "2F" and your "Master Bath" to be "MBath" or the like).
+
+If you want shorter friendly names, you can use the name_mappings congfiguration option to rename things, such as:
+
+```
+  name_mappings:
+    - area: 'second floor'
+      to: 2F
+```
+
+to rename everything on your second floor to the form "2F-Master Bath-Vanity
+Light".
+
 
 In some cases the Vantage component uses object names to infer functionality,
 since the Vantage metadata makes it hard to determine.  If a light's name ends
@@ -181,6 +199,7 @@ Chances are you don't want to control each and every circuit from the Lovelace
 UI.  You can group the Vantage lights into simpler lights using the "group"
 plaform like this:
 
+```
 light:
   - platform: group
     name: Basement Bath
@@ -195,18 +214,19 @@ light:
       - light.basement_bedroom_4_br4_ceiling_cans
       - light.basement_bedroom_4_br4_center_light
       - light.basement_bedroom_4_closet_br4_closet_storage
+```
 
 
 
 Power Sensors
 =============
 
-Before trying Home Assistant, I never realized that my Vantage system was
-measuring the power of all of its lighting loads (at least the ones on Infusion
-Dimmer modules).  This Vantage component gives you the data from your individual
-power sensors, you may want to aggregate it into a single measure using some
-code similar to this:
+Infusion Dimmer modules have a neat feature which is not visible in Design
+Center: they measure the power consumption of all of their lighting loads.  This
+Vantage component gives you the data from your individual power sensors, you may
+want to aggregate it into a single measure using some code similar to this:
 
+```
 sensor:
   - platform: template
     sensors:
@@ -214,6 +234,7 @@ sensor:
         friendly_name: "Lighting Energy Usage"
         unit_of_measurement: 'W'
         value_template: "{{ states('sensor.power_sensor_line_d_365') | float + states('sensor.power_sensor_line_d_281') | float + states('sensor.power_sensor_line_d_175') | float + states('sensor.power_sensor_line_d_120') | float + states('sensor.power_sensor_line_d') | float + states('sensor.power_sensor_line_c_364') | float + states('sensor.power_sensor_line_c_280') | float + states('sensor.power_sensor_line_c_174') | float + states('sensor.power_sensor_line_c_119') | float + states('sensor.power_sensor_line_c') | float + states('sensor.power_sensor_line_b_363') | float + states('sensor.power_sensor_line_b_279') | float + states('sensor.power_sensor_line_b_173') | float + states('sensor.power_sensor_line_b_118') | float + states('sensor.power_sensor_line_b') | float + states('sensor.power_sensor_line_a') | float + states('sensor.power_sensor_line_a_117') | float + states('sensor.power_sensor_line_a_172') | float + states('sensor.power_sensor_line_a_278') | float + states('sensor.power_sensor_line_a_362') | float }}"
+```
 
 
 Not Supported (Yet?)
@@ -225,8 +246,6 @@ includes:
   * Change the color, brightness or blink rate of the LED light on each keypad
     button.
   * Dim lights in response to long button presses.
-  * Interface fully with A/V components, thermostats, alarm systems, or other
-    non-lighting devices you might have attached to your Vantage system.
   * Cause the keypads to make a tone.  (It appears that there is an interface to
     make a keypad start making a tone and stop making a tone, but not to have it
     play a tone for a specified duration...)
@@ -235,3 +254,17 @@ includes:
     component allows Home Assistant to control Vantage, not Vantage to control
     Home Assistant).
   * Lock/unlock Vantage objects.
+  * Interface fully with A/V components, thermostats, alarm systems, or other
+    non-lighting devices you might have attached to your Vantage system.
+
+An example of this last item: one of the early users of this Vantage module had
+an Elk alarm system which was wired to their Vantage Infusion controller through
+a serial cable.  The Elk driver for Vantage worked, but awkward to use.  For
+example, it didn't have different states for an alarm being armed or simply in
+the process of arming -- which made it hard to write routines to only run if the
+alarm was armed.  The Home Assistant Elk driver is more full featured, and makes
+creating such automations easy.
+
+As a result, this user chose to create a new serial cable to plug the Elk
+directly into their Home Assistant computer (alternatively, they could have
+spent more money to buy the Elk IP interface, which is also known to work well).
