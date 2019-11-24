@@ -153,6 +153,38 @@ things:
     vantage_button_multipressed).
 
 
+Leaving Stuff Out
+=================
+
+If you feel that Home Assistant is overwhelmed by all the Entities from Vantage
+you are not going to immediately use, you can just leave them out.  Here are
+some configuration options you can use:
+
+```
+  # Don't include Vantage buttons:
+  exclude_buttons: True
+  # Don't include Vantage contacts (such as motion sensors):
+  exclude_contacts: True
+  # Don't include keypads:
+  exclude_keypads: True
+  # Don't include Vantage variables:
+  exclude_variables: True
+  # Don't include any object with the string "DISABLED" or "BROKEN" in the name:
+  exclude_name_substring: 'DISABLED,BROKEN'
+  # Include variables which are prefixed with '_' (they are normally excluded):
+  include_underscore_variables: True
+
+  # Not sure what an "area" is, need to look into this.
+  only_areas: ???
+  exclude_areas: ???
+```
+
+If you are running Home Assistant on an Raspberry Pi, then the system might bog
+down doing database writes to the sdcard once you start using it to control a
+Vantage system.  Offloading the database to an external system (such as a server
+running MariaDB) can improve performance dramatically.
+
+
 Naming of Entities
 ==================
 
@@ -169,12 +201,22 @@ automations).  If you have two objects with the same name (very common with
 buttons, where multiple buttons may have similar names such as "On" and "Off"),
 this module will just add the VID to the end.
 
-These names are very long.  If you want shorter Entity names, you can either go
-through and rename all the Entities in Home Assistant, or you can rename your
-objects in Vantage before syncing to Home Assistant (say, by renaming your
-"Second Floor" to be "2F" and your "Master Bath" to be "MBath" or the like).
+These names are very long.  If you want shorter Entity names, you can do one of
+the following:
 
-If you want shorter friendly names, you can use the name_mappings congfiguration option to rename things, such as:
+1.  Use the Configuration->Entity Registry UI to rename your entities.  This can
+    be tedious, and if you ever re-initialize Home Assistant's Entity registry
+    (such as by following step 2 below) then you may lose these changes.
+
+2.  Rename your objects in the Vantage Design Center.  The "Display Name" will
+    override the "Name" field in Home Assistant if present (Note: only for Load
+    objects, for keypads and motion sensors it does not).  Once you do this you
+    need to set `disable_cache: True` in your `configuration.yaml`, erase the
+    file `~/.homeassistant/.storage/core.entity_registry`, and restart Home
+    Assistant to rebuild the entity registry.  You may renable the cache once
+    Home Assistant has restarted once.
+
+3.  Create mappings to rename objects in your `configuration.yaml`, like:
 
 ```
   name_mappings:
@@ -182,9 +224,9 @@ If you want shorter friendly names, you can use the name_mappings congfiguration
       to: 2F
 ```
 
-to rename everything on your second floor to the form "2F-Master Bath-Vanity
-Light".
-
+    Note that unless you delete the entity registry and rebuild it (as described
+    in 2 above) this will only rename the friendly names of entities and not the
+    entity name.
 
 In some cases the Vantage component uses object names to infer functionality,
 since the Vantage metadata makes it hard to determine.  If a light's name ends
@@ -240,27 +282,39 @@ sensor:
 Not Supported (Yet?)
 ====================
 
-There are things that Vantage can do which Home Assistant can't do (yet).  This
-includes:
+There are things that Vantage can do which Home Assistant can't do (yet).  Here
+is an incomplete list with workarounds:
 
   * Change the color, brightness or blink rate of the LED light on each keypad
     button.
+        => Write a Vantage function to do this, invoke from Home Assistant
   * Dim lights in response to long button presses.
+        => Configure the button to invoke the Dim Cycle routine on the Vantage
+           controller, and then have Home Assistant events respond to the light
+           brightness level changing.
   * Cause the keypads to make a tone.  (It appears that there is an interface to
     make a keypad start making a tone and stop making a tone, but not to have it
     play a tone for a specified duration...)
+        => Write a Vantage function to do this, invoke from Home Assistant
   * Enable/disable Vacation mode on the Vantage.
+        => Write a Vantage function to do this, invoke from Home Assistant
   * Invoke Home Assistant actions or routines from Vantage procedures (this
     component allows Home Assistant to control Vantage, not Vantage to control
     Home Assistant).
-  * Lock/unlock Vantage objects.
+        => Use a variable as a signal: increment a Vantage variable from the
+           Vantage function, and then trigger Home Assistant events based on the
+           variable changing.  (This is a real kludge, but it seems to work.)
+  * Lock/unlock Vantage objects.  (Why?)
+        => Write a Vantage function to do this, invoke from Home Assistant
   * Interface fully with A/V components, thermostats, alarm systems, or other
     non-lighting devices you might have attached to your Vantage system.
+        => Hook them up to Home Assistant instead.  Alternatively, write a
+           Vantage function to do this, invoke from Home Assistant.
 
 An example of this last item: one of the early users of this Vantage module had
 an Elk alarm system which was wired to their Vantage Infusion controller through
-a serial cable.  The Elk driver for Vantage worked, but awkward to use.  For
-example, it didn't have different states for an alarm being armed or simply in
+a serial cable.  The Elk driver for Vantage worked, but awkward to use.  One
+problem: it didn't have different states for an alarm being armed or simply in
 the process of arming -- which made it hard to write routines to only run if the
 alarm was armed.  The Home Assistant Elk driver is more full featured, and makes
 creating such automations easy.
