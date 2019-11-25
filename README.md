@@ -74,7 +74,6 @@ And add something like the following to configuration.yaml:
 ```
 vantage:
   host: 192.168.0.123
-  disable_cache: True
   username: !secret vantage_username
   password: !secret vantage_password
   exclude_areas: "SPARE RELAYS"
@@ -163,26 +162,33 @@ some configuration options you can use:
 ```
   # Don't include Vantage buttons:
   exclude_buttons: True
+
   # Don't include Vantage contacts (such as motion sensors):
   exclude_contacts: True
+
   # Don't include keypads:
   exclude_keypads: True
+
   # Don't include Vantage variables:
   exclude_variables: True
+
   # Don't include any object with the string "DISABLED" or "BROKEN" in the name:
   exclude_name_substring: 'DISABLED,BROKEN'
+
   # Include variables which are prefixed with '_' (they are normally excluded):
   include_underscore_variables: True
 
-  # Not sure what an "area" is, need to look into this.
-  only_areas: ???
-  exclude_areas: ???
+  # Design Center organizes all Vantage objects into "areas" (floors/rooms),
+  # these options let you limit which areas this integration pays attention to:
+  only_areas: 'First floor'
+  exclude_areas: 'Guest bathroom'
 ```
 
-If you are running Home Assistant on an Raspberry Pi, then the system might bog
-down doing database writes to the sdcard once you start using it to control a
-Vantage system.  Offloading the database to an external system (such as a server
-running MariaDB) can improve performance dramatically.
+This driver can add a lot of devices to your home assistant system all at once
+which can bog your system down doing database writes.  If you are running Home
+Assistant on a low-powered machine like a Raspberry Pi, then offloading the
+database to an external system (such as a server running MariaDB) can improve
+performance dramatically.
 
 
 Naming of Entities
@@ -211,10 +217,9 @@ the following:
 2.  Rename your objects in the Vantage Design Center.  The "Display Name" will
     override the "Name" field in Home Assistant if present (Note: only for Load
     objects, for keypads and motion sensors it does not).  Once you do this you
-    need to set `disable_cache: True` in your `configuration.yaml`, erase the
-    file `~/.homeassistant/.storage/core.entity_registry`, and restart Home
-    Assistant to rebuild the entity registry.  You may renable the cache once
-    Home Assistant has restarted once.
+    need to ensure that `enable_cache` is not set in your `configuration.yaml`,
+    erase the file `~/.homeassistant/.storage/core.entity_registry`, and restart
+    Home Assistant to rebuild the entity registry.
 
 3.  Create mappings to rename objects in your `configuration.yaml`, like:
 
