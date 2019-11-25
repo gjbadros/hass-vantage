@@ -70,7 +70,7 @@ def mappings_from(nm):
     from the name_mappings config setting."""
     answer = {}
     for mapping in nm:
-        area = mapping[CONF_AREA]
+        area = mapping[CONF_AREA].lower()
         to = mapping[CONF_TO]
         answer[area] = to
         _LOGGER.debug("Adding mapping of '%s' to '%s'", area, to)
