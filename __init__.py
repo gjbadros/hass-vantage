@@ -165,7 +165,8 @@ async def async_setup(hass, base_config):
 
     await hass.async_add_executor_job(
         functools.partial(vc.load_xml_db,
-                          not(config.get(CONF_ENABLE_CACHE, False)))
+                          not(config.get(CONF_ENABLE_CACHE, False)),
+                          hass.config.config_dir)
     )
     await hass.async_add_executor_job(vc.connect)
     _LOGGER.debug("Connected to main repeater at %s", config[CONF_HOST])
