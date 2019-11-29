@@ -6,9 +6,6 @@ https://home-assistant.io/components/sensor.vantage/
 """
 
 import logging
-import time
-import collections
-import threading
 
 # we want to restore entity values because vantage models dry-contacts
 # and keypads and buttons as instantaneous actions whose state
@@ -108,15 +105,6 @@ class VantageSensor(VantageDevice, RestoreEntity):
     def _update_callback(self, _device):
         """Run when invoked by pyvantage when the device state changes."""
         self.schedule_update_ha_state()
-        if self._vantage_device.kind == "button":
-            if self.state == "PRESS":
-                self._clicktracker.pressed()
-            elif self.state == "RELEASE":
-                self._clicktracker.released()
-            else:
-                _LOGGER.warning("Unexpected state for button %s: %s",
-                                self, self.state)
-
 
 
 # TODO: this maybe could be just returning true for should_poll
@@ -141,90 +129,3 @@ class VantagePollingSensor(VantageSensor):
     def should_poll(self):
         """These devices do poll."""
         return True
-
-class ButtonClickTracker:
-    """Generates events for single click, double tap, etc. on buttons.
-
-    Note that we arbitrarily define a multipress as 'X press events in a single
-    second'.
-
-    """
-
-    def __init__(self, hass, vantage_device, controller, name):
-        self._hass = hass
-        self._vantage_device = vantage_device
-        self._controller = controller
-        self._event_queue = collections.deque()
-        self._event_queue_lock = threading.Lock()
-        self._name = name
-
-    def pressed(self):
-        # First fire an event for the button press.  This lets users define
-        # automations which react instantly to a button tap (instead of waiting
-        # 1 second to count how many taps there were):
-        time = self._vantage_device.extra_info['last_changed_timestamp']
-        self._hass.bus.fire('vantage_button_pressed', {
-            'button': self._name,
-            'time': time
-        })
-
-        # Record when this press happened in _event_queue:
-        self._event_queue_lock.acquire()
-        try:
-            self._event_queue.append(time)
-        finally:
-            self._event_queue_lock.release()
-
-        # Check back one second from now to issue multipress events:
-        t = threading.Timer(1.0, self.process_event_queue)
-        t.start()
-
-    def released(self):
-        # Fire an event for the button release
-        time = self._vantage_device.extra_info['last_changed_timestamp']
-        self._hass.bus.fire('vantage_button_released', {
-            'button': self._name,
-            'time': time
-        })
-
-    def process_event_queue(self):
-        """Count clicks and issue vantage_button_multipressed events.
-
-        Since this is invoked once for every button press, and it is invoked at
-        least 1.0 seconds after the press -- every button press should be
-        removed from the queue and counted at most 1 second (plus episilon)
-        after it is added to the queue.
-
-        If the system gets bogged down, it may take a bit more time to invoke
-        this.  Oh well.
-
-        If threading.Timer invokes this too soon (it fails to wait 1.0 seconds),
-        then this routine may just leave the press event in the queue for the
-        next invocation (which may not happen until the user presses the button
-        again).  Assume this will never (or at least, very very rarely) happen.
-
-        """
-
-        clicks = 0
-        self._event_queue_lock.acquire()
-        try:
-            if self._event_queue:
-                now = time.time()
-                start_time = self._event_queue[0]
-                if (now - start_time) >= 1.0:
-                    while (self._event_queue and
-                           (self._event_queue[0] - start_time) <= 1.0):
-                        clicks += 1
-                        self._event_queue.popleft()
-        finally:
-            self._event_queue_lock.release()
-
-        if clicks > 0:
-            self._hass.bus.fire('vantage_button_multipressed', {
-                'clicks': clicks,
-                'button': self._name,
-                'time': start_time
-            })
-            # Recurse to empty the queue in the case where execution of this
-            # routine was really delayed:
-            self.process_event_queue()
