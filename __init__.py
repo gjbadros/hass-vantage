@@ -25,7 +25,7 @@ VANTAGE_DEVICES = "vantage_devices"
 CONF_ONLY_AREAS = "only_areas"
 CONF_DISABLE_CACHE = "disable_cache"
 CONF_EXCLUDE_AREAS = "exclude_areas"
-CONF_EXCLUDE_BUTTONS = "exclude_buttons"
+CONF_INCLUDE_BUTTONS = "include_buttons"
 CONF_EXCLUDE_CONTACTS = "exclude_contacts"
 CONF_EXCLUDE_KEYPADS = "exclude_keypads"
 CONF_EXCLUDE_VARIABLES = "exclude_variables"
@@ -51,12 +51,14 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ONLY_AREAS): cv.string,
                 vol.Optional(CONF_EXCLUDE_AREAS): cv.string,
                 vol.Optional(CONF_EXCLUDE_NAME_SUBSTRING): cv.string,
-                vol.Optional(CONF_EXCLUDE_BUTTONS): cv.boolean,
-                vol.Optional(CONF_EXCLUDE_CONTACTS): cv.boolean,
-                vol.Optional(CONF_EXCLUDE_KEYPADS): cv.boolean,
-                vol.Optional(CONF_EXCLUDE_VARIABLES): cv.boolean,
-                vol.Optional(CONF_INCLUDE_UNDERSCORE_VARIABLES): cv.boolean,
-                vol.Optional(CONF_DISABLE_CACHE): cv.boolean,  # FIXME
+                vol.Optional(CONF_INCLUDE_BUTTONS, default=False): cv.boolean,
+                vol.Optional(CONF_EXCLUDE_CONTACTS, default=False): cv.boolean,
+                vol.Optional(CONF_EXCLUDE_KEYPADS, default=False): cv.boolean,
+                vol.Optional(CONF_EXCLUDE_VARIABLES, default=False): cv.boolean,
+                vol.Optional(CONF_INCLUDE_UNDERSCORE_VARIABLES,
+                             default=False): cv.boolean,
+                vol.Optional(CONF_DISABLE_CACHE,
+                             default=False): cv.boolean,  # FIXME
                 vol.Optional(CONF_NAME_MAPPINGS): NAME_MAPPINGS_SCHEMA,
             }
         )
@@ -272,7 +274,7 @@ async def async_setup(hass, base_config):
     # buttons and dry contacts are are sensors too:
     # Their value is the name of the last action on them
     for button in vc.buttons:
-        if (button.kind == "button" and not config.get(CONF_EXCLUDE_BUTTONS)) or (
+        if (button.kind == "button" and config.get(CONF_INCLUDE_BUTTONS)) or (
             button.kind == "contact" and not config.get(CONF_EXCLUDE_CONTACTS)
         ):
             if should_keep_for_area_vid(button.area) and not is_excluded_name(button):
