@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 DOMAIN = "vantage"
 
@@ -79,6 +80,21 @@ def mappings_from(nm):
     return answer
 
 
+def button_pressed(hass, button):
+    """Generate HASS bus events for button presses and releases."""
+    payload = {
+        'button': slugify(button.name),
+        'button_vid': button.vid
+    }
+    if button.value == "PRESS":
+        hass.bus.fire('vantage_button_pressed', payload)
+    elif button.value == "RELEASE":
+        hass.bus.fire('vantage_button_released', payload)
+    else:
+        _LOGGER.warning("Unexpected state for button %s: %s",
+                        button.name, button.value)
+
+
 async def async_setup(hass, base_config):
     """Set up the Vantage component."""
     from pyvantage import Vantage
@@ -122,6 +138,10 @@ async def async_setup(hass, base_config):
         _LOGGER.debug("Called CALL_TASK service: %s", str(call))
         fn = functools.partial(hass.data[VANTAGE_CONTROLLER].call_task, name)
         await hass.async_add_executor_job(fn)
+
+    def button_update_callback(device):
+        """Run when invoked by pyvantage when the device state changes."""
+        button_pressed(hass, device)
 
     hass.data[VANTAGE_CONTROLLER] = None
     hass.data[VANTAGE_DEVICES] = {"light": [], "cover": [], "sensor": [], "switch": []}
@@ -279,6 +299,9 @@ async def async_setup(hass, base_config):
         ):
             if should_keep_for_area_vid(button.area) and not is_excluded_name(button):
                 hass.data[VANTAGE_DEVICES]["sensor"].append((None, button))
+        if (button.kind == "button" and not config.get(CONF_INCLUDE_BUTTONS)):
+            if should_keep_for_area_vid(button.area) and not is_excluded_name(button):
+                hass.async_add_job(vc.subscribe, button, button_update_callback)
 
     for sensor in vc.sensors:
         if should_keep_for_area_vid(sensor.area) and not is_excluded_name(sensor):
