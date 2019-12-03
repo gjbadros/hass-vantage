@@ -83,8 +83,11 @@ def mappings_from(nm):
 def button_pressed(hass, button):
     """Generate HASS bus events for button presses and releases."""
     payload = {
-        'button': slugify(button.name),
-        'button_vid': button.vid
+        'button':        slugify(button.name),
+        'button_vid':    button.vid,
+        'button_number': button.number,
+        'keypad_name':   slugify(button._keypad.name),
+        'keypad_vid':    button._parent
     }
     if button.value == "PRESS":
         hass.bus.fire('vantage_button_pressed', payload)
