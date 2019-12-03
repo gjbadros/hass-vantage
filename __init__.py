@@ -23,7 +23,7 @@ VANTAGE_CONTROLLER = "vantage_controller"
 VANTAGE_DEVICES = "vantage_devices"
 
 CONF_ONLY_AREAS = "only_areas"
-CONF_DISABLE_CACHE = "disable_cache"
+CONF_ENABLE_CACHE = "enable_cache"
 CONF_EXCLUDE_AREAS = "exclude_areas"
 CONF_EXCLUDE_BUTTONS = "exclude_buttons"
 CONF_EXCLUDE_CONTACTS = "exclude_contacts"
@@ -56,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_EXCLUDE_KEYPADS): cv.boolean,
                 vol.Optional(CONF_EXCLUDE_VARIABLES): cv.boolean,
                 vol.Optional(CONF_INCLUDE_UNDERSCORE_VARIABLES): cv.boolean,
-                vol.Optional(CONF_DISABLE_CACHE): cv.boolean,  # FIXME
+                vol.Optional(CONF_ENABLE_CACHE): cv.boolean,  # FIXME
                 vol.Optional(CONF_NAME_MAPPINGS): NAME_MAPPINGS_SCHEMA,
             }
         )
@@ -164,7 +164,9 @@ async def async_setup(hass, base_config):
     vc = hass.data[VANTAGE_CONTROLLER]
 
     await hass.async_add_executor_job(
-        functools.partial(vc.load_xml_db, config.get(CONF_DISABLE_CACHE, False))
+        functools.partial(vc.load_xml_db,
+                          not(config.get(CONF_ENABLE_CACHE, False)),
+                          hass.config.config_dir)
     )
     await hass.async_add_executor_job(vc.connect)
     _LOGGER.debug("Connected to main repeater at %s", config[CONF_HOST])
