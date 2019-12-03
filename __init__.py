@@ -83,15 +83,23 @@ def handle_dump_memory():
     from pympler import muppy, summary
     from collections import Counter
     import json
+    import random
 
     _LOGGER.warning("vantage.dump_memory started")
     all_objects = muppy.get_objects()
     sum1 = summary.summarize(all_objects)
     summary.print_(sum1)
     _LOGGER.warning("vantage.dump_memory summary done")
-    event_types = [e.event_type for e in all_objects if isinstance(e, Event)]
+    events = [e for e in all_objects if isinstance(e, Event)]
+    event_types = [e.event_type for e in events]
     c = Counter(event_types)
     _LOGGER.warning("event_types: %s", json.dumps(c.most_common()))
+    for e in events:
+        if e.event_type == 'call_service':
+            if random.randint(0, 99) == 2:
+                _LOGGER.warning("event_type call_service, data = %s",
+                                json.dumps(e.data))
+                _LOGGER.warning("context =  %s", e.context)
     _LOGGER.warning("vantage.dump_memory completed")
 
 
