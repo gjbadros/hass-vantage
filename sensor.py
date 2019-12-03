@@ -13,7 +13,7 @@ import logging
 # to use hass state to keep track of them between reboots
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
+from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER, button_pressed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,10 +97,12 @@ class VantageSensor(VantageDevice, RestoreEntity):
         """Return the device class for this sensor."""
         return self._device_class
 
-    def _update_callback(self, _device):
+    def _update_callback(self, device):
         """Run when invoked by pyvantage when the device state changes."""
         self.schedule_update_ha_state()
 
+        if self._vantage_device.kind == "button":
+            button_pressed(self.hass, device)
 
 # TODO: this maybe could be just returning true for should_poll
 class VantagePollingSensor(VantageSensor):
