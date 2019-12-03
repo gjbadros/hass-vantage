@@ -86,8 +86,8 @@ def button_pressed(hass, button):
         'button':        slugify(button.name),
         'button_vid':    button.vid,
         'button_number': button.number,
-        'keypad_name':   slugify(button._keypad.name),
-        'keypad_vid':    button._parent
+        'keypad_name':   slugify(button.keypad_name),
+        'keypad_vid':    button.keypad_vid
     }
     if button.value == "PRESS":
         hass.bus.fire('vantage_button_pressed', payload)
