@@ -138,8 +138,9 @@ things:
 5.  Temperature, power and current sensors showing the status of the Infusion
     dimmer modules and their attached loads.
 6.  For every light group defined by Vantage, a light.* entity.
-7.  For every button on every keypad, a sensor.* entity showing whether the
-    button is current pressed or not.
+7.  If enabled (set include_buttons to True to enable): for every button on
+    every keypad, a sensor.* entity showing whether the button is current
+    pressed or not.
 8.  For every keypad, a sensor.* entity saying which button on the keypad was
     pressed last.
 9.  For every variable defined in Vantage, a sensor.* entity containing the
@@ -148,8 +149,7 @@ things:
     (vantage.set_variable, vantage.call_task, vantage.set_variable_vid, and
     vantage.call_task_vid).
 11. Events which get fired whenever a keypad button is pressed
-    (vantage_button_pressed, vantage_button_released,
-    vantage_button_multipressed).
+    (vantage_button_pressed, vantage_button_released).
 
 
 Leaving Stuff Out
@@ -160,9 +160,6 @@ you are not going to immediately use, you can just leave them out.  Here are
 some configuration options you can use:
 
 ```
-  # Don't include Vantage buttons:
-  exclude_buttons: True
-
   # Don't include Vantage contacts (such as motion sensors):
   exclude_contacts: True
 

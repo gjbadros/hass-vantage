@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 DOMAIN = "vantage"
 
@@ -25,7 +26,7 @@ VANTAGE_DEVICES = "vantage_devices"
 CONF_ONLY_AREAS = "only_areas"
 CONF_ENABLE_CACHE = "enable_cache"
 CONF_EXCLUDE_AREAS = "exclude_areas"
-CONF_EXCLUDE_BUTTONS = "exclude_buttons"
+CONF_INCLUDE_BUTTONS = "include_buttons"
 CONF_EXCLUDE_CONTACTS = "exclude_contacts"
 CONF_EXCLUDE_KEYPADS = "exclude_keypads"
 CONF_EXCLUDE_VARIABLES = "exclude_variables"
@@ -51,12 +52,14 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ONLY_AREAS): cv.string,
                 vol.Optional(CONF_EXCLUDE_AREAS): cv.string,
                 vol.Optional(CONF_EXCLUDE_NAME_SUBSTRING): cv.string,
-                vol.Optional(CONF_EXCLUDE_BUTTONS): cv.boolean,
-                vol.Optional(CONF_EXCLUDE_CONTACTS): cv.boolean,
-                vol.Optional(CONF_EXCLUDE_KEYPADS): cv.boolean,
-                vol.Optional(CONF_EXCLUDE_VARIABLES): cv.boolean,
-                vol.Optional(CONF_INCLUDE_UNDERSCORE_VARIABLES): cv.boolean,
-                vol.Optional(CONF_ENABLE_CACHE): cv.boolean,  # FIXME
+                vol.Optional(CONF_INCLUDE_BUTTONS, default=False): cv.boolean,
+                vol.Optional(CONF_EXCLUDE_CONTACTS, default=False): cv.boolean,
+                vol.Optional(CONF_EXCLUDE_KEYPADS, default=False): cv.boolean,
+                vol.Optional(CONF_EXCLUDE_VARIABLES, default=False): cv.boolean,
+                vol.Optional(CONF_INCLUDE_UNDERSCORE_VARIABLES,
+                             default=False): cv.boolean,
+                vol.Optional(CONF_ENABLE_CACHE,
+                             default=False): cv.boolean,  # FIXME
                 vol.Optional(CONF_NAME_MAPPINGS): NAME_MAPPINGS_SCHEMA,
             }
         )
@@ -75,6 +78,24 @@ def mappings_from(nm):
         answer[area] = to
         _LOGGER.debug("Adding mapping of '%s' to '%s'", area, to)
     return answer
+
+
+def button_pressed(hass, button):
+    """Generate HASS bus events for button presses and releases."""
+    payload = {
+        'button':        slugify(button.name),
+        'button_vid':    button.vid,
+        'button_number': button.number,
+        'keypad_name':   slugify(button._keypad.name),
+        'keypad_vid':    button._parent
+    }
+    if button.value == "PRESS":
+        hass.bus.fire('vantage_button_pressed', payload)
+    elif button.value == "RELEASE":
+        hass.bus.fire('vantage_button_released', payload)
+    else:
+        _LOGGER.warning("Unexpected state for button %s: %s",
+                        button.name, button.value)
 
 
 async def async_setup(hass, base_config):
@@ -120,6 +141,10 @@ async def async_setup(hass, base_config):
         _LOGGER.debug("Called CALL_TASK service: %s", str(call))
         fn = functools.partial(hass.data[VANTAGE_CONTROLLER].call_task, name)
         await hass.async_add_executor_job(fn)
+
+    def button_update_callback(device):
+        """Run when invoked by pyvantage when the device state changes."""
+        button_pressed(hass, device)
 
     hass.data[VANTAGE_CONTROLLER] = None
     hass.data[VANTAGE_DEVICES] = {"light": [], "cover": [], "sensor": [], "switch": []}
@@ -274,11 +299,14 @@ async def async_setup(hass, base_config):
     # buttons and dry contacts are are sensors too:
     # Their value is the name of the last action on them
     for button in vc.buttons:
-        if (button.kind == "button" and not config.get(CONF_EXCLUDE_BUTTONS)) or (
+        if (button.kind == "button" and config.get(CONF_INCLUDE_BUTTONS)) or (
             button.kind == "contact" and not config.get(CONF_EXCLUDE_CONTACTS)
         ):
             if should_keep_for_area_vid(button.area) and not is_excluded_name(button):
                 hass.data[VANTAGE_DEVICES]["sensor"].append((None, button))
+        if (button.kind == "button" and not config.get(CONF_INCLUDE_BUTTONS)):
+            if should_keep_for_area_vid(button.area) and not is_excluded_name(button):
+                hass.async_add_job(vc.subscribe, button, button_update_callback)
 
     for sensor in vc.sensors:
         if should_keep_for_area_vid(sensor.area) and not is_excluded_name(sensor):
