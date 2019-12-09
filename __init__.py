@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.core import Event
 from homeassistant.util import slugify
 
 DOMAIN = "vantage"
@@ -80,6 +81,31 @@ def mappings_from(nm):
     return answer
 
 
+def handle_dump_memory():
+    """Dump memory using muppy to look for a leak"""
+    from pympler import muppy, summary
+    from collections import Counter
+    import json
+    import random
+
+    _LOGGER.warning("vantage.dump_memory started")
+    all_objects = muppy.get_objects()
+    sum1 = summary.summarize(all_objects)
+    summary.print_(sum1)
+    _LOGGER.warning("vantage.dump_memory summary done")
+    events = [e for e in all_objects if isinstance(e, Event)]
+    event_types = [e.event_type for e in events]
+    c = Counter(event_types)
+    _LOGGER.warning("event_types: %s", json.dumps(c.most_common()))
+    for e in events:
+        if e.event_type == 'call_service':
+            if random.randint(0, 99) == 2:
+                _LOGGER.warning("event_type call_service, data = %s",
+                                json.dumps(e.data))
+                _LOGGER.warning("context =  %s", e.context)
+    _LOGGER.warning("vantage.dump_memory completed")
+
+
 def button_pressed(hass, button):
     """Generate HASS bus events for button presses and releases."""
     payload = {
@@ -123,7 +149,8 @@ async def async_setup(hass, base_config):
         if value is None:
             raise Exception("Missing value on vantage.set_variable")
         _LOGGER.debug("Called SET_VARIABLE service: %s", str(call))
-        fn = functools.partial(hass.data[VANTAGE_CONTROLLER].set_variable, name, value)
+        fn = functools.partial(hass.data[VANTAGE_CONTROLLER].set_variable,
+                               name, value)
         await hass.async_add_executor_job(fn)
 
     async def async_handle_call_task_vid(call):
@@ -131,7 +158,8 @@ async def async_setup(hass, base_config):
         if vid is None:
             raise Exception("Missing vid on vantage.call_task_vid")
         _LOGGER.debug("Called CALL_TASK_VID service: %s", str(call))
-        fn = functools.partial(hass.data[VANTAGE_CONTROLLER].call_task_vid, vid)
+        fn = functools.partial(hass.data[VANTAGE_CONTROLLER].call_task_vid,
+                               vid)
         await hass.async_add_executor_job(fn)
 
     async def async_handle_call_task(call):
@@ -142,12 +170,16 @@ async def async_setup(hass, base_config):
         fn = functools.partial(hass.data[VANTAGE_CONTROLLER].call_task, name)
         await hass.async_add_executor_job(fn)
 
+    async def async_handle_dump_memory(call):
+        await hass.async_add_executor_job(handle_dump_memory)
+
     def button_update_callback(device):
         """Run when invoked by pyvantage when the device state changes."""
         button_pressed(hass, device)
 
     hass.data[VANTAGE_CONTROLLER] = None
-    hass.data[VANTAGE_DEVICES] = {"light": [], "cover": [], "sensor": [], "switch": []}
+    hass.data[VANTAGE_DEVICES] = {"light": [], "cover": [],
+                                  "sensor": [], "switch": []}
 
     config = base_config.get(DOMAIN)
     only_areas = config.get(CONF_ONLY_AREAS)
@@ -165,7 +197,7 @@ async def async_setup(hass, base_config):
 
     config_name_mappings = config.get(CONF_NAME_MAPPINGS)
     name_mappings = None
-    if not config_name_mappings is None:
+    if config_name_mappings is not None:
         name_mappings = mappings_from(config_name_mappings)
 
     username = None
@@ -200,8 +232,8 @@ async def async_setup(hass, base_config):
         for ns in set_exclude_name_substring:
             if ns in entity.name:
                 _LOGGER.debug(
-                    "skipping %s because exclude_name_substring has '%s'", entity, ns
-                )
+                    "skipping %s because exclude_name_substring has '%s'",
+                    entity, ns)
                 return True
         return False
 
@@ -327,6 +359,7 @@ async def async_setup(hass, base_config):
     hass.services.async_register(DOMAIN, "call_task_vid", async_handle_call_task_vid)
     hass.services.async_register(DOMAIN, "set_variable", async_handle_set_variable)
     hass.services.async_register(DOMAIN, "call_task", async_handle_call_task)
+    hass.services.async_register(DOMAIN, "dump_memory", async_handle_dump_memory)
     return True
 
 

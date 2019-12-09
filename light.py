@@ -5,10 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.vantage/
 """
 import logging
+import asyncio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     ATTR_HS_COLOR,
@@ -29,7 +31,7 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
 )
 
-from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.helpers.service import async_extract_entity_ids
 
 from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
 
@@ -48,12 +50,16 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     devs = []
 
     async def async_handle_set_state(call):
-        entity_ids = extract_entity_ids(hass, call, True)
+        entity_ids = await async_extract_entity_ids(hass, call, True)
         if entity_ids:
             entities = [entity for entity in devs if entity.entity_id in entity_ids]
+#            tasks = []
             for light in entities:
-                _LOGGER.info("light.set_state(%s) to %s", light, call.data)
-                light.set_state(**call.data)
+                await light.set_state(**call.data)
+#                task = light.set_state(**call.data)
+#                tasks.append(hass.async_create_task(task))
+#            if tasks:
+#                await asyncio.wait(tasks)
 
     for (area_name, device) in hass.data[VANTAGE_DEVICES]["light"]:
         dev = VantageLight(area_name, device, hass.data[VANTAGE_CONTROLLER])
@@ -147,7 +153,7 @@ class VantageLight(VantageDevice, Light):
         """Set the level, including other dirty properties."""
         self._vantage_device.level = to_vantage_level(brightness)
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         if ATTR_BRIGHTNESS in kwargs and self._vantage_device.is_dimmable:
             brightness = kwargs[ATTR_BRIGHTNESS]
         elif self._prev_brightness == 0:
@@ -156,19 +162,17 @@ class VantageLight(VantageDevice, Light):
             brightness = self._prev_brightness
         self._prev_brightness = brightness
         kwargs[ATTR_BRIGHTNESS] = brightness
-        self.set_state(**kwargs)
+        self.hass.async_create_task(self.set_state(**kwargs))
 
     def _set_ramp(self, **kwargs):
-        if ATTR_TRANSITION in kwargs:
-            transition_time_in_s = kwargs[ATTR_TRANSITION]
-        else:
-            transition_time_in_s = 1
+        transition_time_in_s = kwargs.get(ATTR_TRANSITION, 1)
         self._vantage_device.set_ramp_sec(transition_time_in_s,
                                           transition_time_in_s,
                                           transition_time_in_s)
 
-    def set_state(self, **kwargs):
+    async def set_state(self, **kwargs):
         """Turn the light on."""
+        _LOGGER.info("light.set_state(%s) to %s", self, kwargs)
         self._set_ramp(**kwargs)
         if ATTR_BRIGHTNESS in kwargs:
             # TODO: is_dimmable test fails for GROUP load types
@@ -183,14 +187,20 @@ class VantageLight(VantageDevice, Light):
             hs_color = kwargs[ATTR_HS_COLOR]
             rgb = color_hs_to_RGB(*hs_color)
             self._vantage_device.rgb = [*rgb]
-        elif ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.debug(
-                "%s set via ATTR_COLOR_TEMP - %s", self, kwargs[ATTR_COLOR_TEMP]
-            )
-            # Color temp in HA is in mireds:
-            # https://en.wikipedia.org/wiki/Mired
-            # M = 1000000/KELVIN_TEMP
-            kelvin = int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
+        elif ATTR_COLOR_TEMP in kwargs or ATTR_KELVIN in kwargs:
+            if ATTR_KELVIN in kwargs:
+                _LOGGER.debug(
+                    "%s set via ATTR_KELVIN - %s", self, kwargs[ATTR_KELVIN]
+                )
+                kelvin = kwargs[ATTR_KELVIN]
+            else:
+                _LOGGER.debug(
+                    "%s set via ATTR_COLOR_TEMP - %s", self, kwargs[ATTR_COLOR_TEMP]
+                )
+                # Color temp in HA is in mireds:
+                # https://en.wikipedia.org/wiki/Mired
+                # M = 1000000/KELVIN_TEMP
+                kelvin = int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
             _LOGGER.debug("%s vantage color temp kelvin = %s", self, kelvin)
             if self._vantage_device._dmx_color:
                 # do conversion
@@ -200,13 +210,14 @@ class VantageLight(VantageDevice, Light):
                 rgb = self.color_temperature_to_dw_27k41k(kelvin)
                 self._vantage_device.rgb = [*rgb]
             self._vantage_device.color_temp = kelvin
-        self.schedule_update_ha_state()
+            
+        await self.async_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    async def turn_off(self, **kwargs):
         """Turn the light off."""
         self._set_ramp(**kwargs)
         self._vantage_device.level = 0
-        self.schedule_update_ha_state()
+        await self.async_update_ha_state()
 
     @property
     def is_on(self):
