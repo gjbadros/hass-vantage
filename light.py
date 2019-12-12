@@ -172,7 +172,8 @@ class VantageLight(VantageDevice, Light):
 
     async def set_state(self, **kwargs):
         """Turn the light on."""
-        _LOGGER.info("light.set_state(%s) to %s", self, kwargs)
+        _LOGGER.info("light.set_state(%s) to %s",
+                     self._vantage_device, kwargs)
         self._set_ramp(**kwargs)
         if ATTR_BRIGHTNESS in kwargs:
             # TODO: is_dimmable test fails for GROUP load types

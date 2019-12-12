@@ -408,7 +408,7 @@ class VantageDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = self._vantage_device._extra_info.copy()
-        attr["Vantage Integration ID"] = self._vantage_device.id
+        attr["vantage_id"] = self._vantage_device.id
         if self.kind is not None:
-            attr["Vantage Kind"] = self.kind
+            attr["vantage_kind"] = self.kind
         return attr
