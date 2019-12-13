@@ -33,6 +33,8 @@ CONF_EXCLUDE_KEYPADS = "exclude_keypads"
 CONF_EXCLUDE_VARIABLES = "exclude_variables"
 CONF_INCLUDE_UNDERSCORE_VARIABLES = "include_underscore_variables"
 CONF_EXCLUDE_NAME_SUBSTRING = "exclude_name_substring"
+CONF_LOG_COMMUNICATIONS = "log_communications"
+CONF_NUM_CONNECTIONS = "num_connections"
 CONF_NAME_MAPPINGS = "name_mappings"
 CONF_AREA = "area"
 CONF_TO = "to"
@@ -53,6 +55,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ONLY_AREAS): cv.string,
                 vol.Optional(CONF_EXCLUDE_AREAS): cv.string,
                 vol.Optional(CONF_EXCLUDE_NAME_SUBSTRING): cv.string,
+                vol.Optional(CONF_LOG_COMMUNICATIONS, default=False): cv.boolean,
+                vol.Optional(CONF_NUM_CONNECTIONS, default=1): cv.positive_int,
                 vol.Optional(CONF_INCLUDE_BUTTONS, default=False): cv.boolean,
                 vol.Optional(CONF_EXCLUDE_CONTACTS, default=False): cv.boolean,
                 vol.Optional(CONF_EXCLUDE_KEYPADS, default=False): cv.boolean,
@@ -216,6 +220,9 @@ async def async_setup(hass, base_config):
         3001,
         2001,
         name_mappings,
+        None,
+        config.get(CONF_LOG_COMMUNICATIONS),
+        config.get(CONF_NUM_CONNECTIONS)
     )
 
     vc = hass.data[VANTAGE_CONTROLLER]
