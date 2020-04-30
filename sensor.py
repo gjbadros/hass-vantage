@@ -104,6 +104,7 @@ class VantageSensor(VantageDevice, RestoreEntity):
         if self._vantage_device.kind == "button":
             button_pressed(self.hass, device)
 
+
 # TODO: this maybe could be just returning true for should_poll
 class VantagePollingSensor(VantageSensor):
     """Representation of a Vantage sensor that needs polling."""

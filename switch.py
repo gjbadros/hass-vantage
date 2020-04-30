@@ -7,7 +7,12 @@ https://home-assistant.io/components/light.vantage/
 import logging
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+)
 from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
+from ..vantage.sensor import VantagePollingSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,11 +20,16 @@ DEPENDENCIES = ["vantage"]
 
 
 # pylint: disable=unused-argument
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Vantage lights."""
     devs = []
+    controller = hass.data[VANTAGE_CONTROLLER]
     for (area_name, device) in hass.data[VANTAGE_DEVICES]["switch"]:
-        dev = VantageSwitch(area_name, device, hass.data[VANTAGE_CONTROLLER])
+        if device.kind == 'variable_bool':
+            dev = VantageVariableSwitch(area_name, device, controller)
+        else:
+            dev = VantageSwitch(area_name, device, controller)
         devs.append(dev)
 
     async_add_devices(devs, True)
@@ -34,6 +44,36 @@ def to_vantage_level(level):
 def to_hass_level(level):
     """Convert the given Vantage (0.0-100.0) level to HASS (0-255)."""
     return int((level * 255) / 100)
+
+
+class VantageVariableSwitch(VantagePollingSensor, SwitchDevice):
+    """Represents a boolean variable sensor as a switch."""
+
+    def __init__(self, area_name, vantage_device, controller):
+        """Initialize the sensor."""
+        _LOGGER.info("SwitchSensor = %s", vantage_device)
+        VantagePollingSensor.__init__(self,
+                                      area_name, vantage_device, controller)
+
+    # this gets overridden by VantagePollingSensor and we want to get
+    # back to the ToggleEntity behavior since this is a switch
+    @property
+    def state(self) -> str:
+        """Return the state."""
+        return STATE_ON if self.is_on else STATE_OFF
+
+    def turn_on(self, **kwargs):
+        self._vantage_device.value = True
+        self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs):
+        self._vantage_device.value = False
+        self.schedule_update_ha_state()
+
+    @property
+    def is_on(self):
+        """Return true iff variable is True."""
+        return self._vantage_device.value
 
 
 class VantageSwitch(VantageDevice, SwitchDevice):
@@ -61,7 +101,7 @@ class VantageSwitch(VantageDevice, SwitchDevice):
 
     @property
     def is_on(self):
-        """Return true if device is on."""
+        """Return true iff device is on."""
         return self._vantage_device.last_level() > 0
 
     async def async_update(self):

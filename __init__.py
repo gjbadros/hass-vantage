@@ -333,7 +333,11 @@ async def async_setup(hass, base_config):
                 if config.get(
                     CONF_INCLUDE_UNDERSCORE_VARIABLES
                 ) or not var.name.startswith("_"):
-                    hass.data[VANTAGE_DEVICES]["sensor"].append((None, var))
+                    if var.kind == 'variable_bool':
+                        dom = "switch"
+                    else:
+                        dom = "sensor"
+                    hass.data[VANTAGE_DEVICES][dom].append((None, var))
 
     # buttons and dry contacts are are sensors too:
     # Their value is the name of the last action on them
@@ -349,7 +353,7 @@ async def async_setup(hass, base_config):
 
     for sensor in vc.sensors:
         if should_keep_for_area_vid(sensor.area) and not is_excluded_name(sensor):
-            hass.data[VANTAGE_DEVICES]["sensor"].append((sensor._area, sensor))
+            hass.data[VANTAGE_DEVICES][dom].append((sensor._area, sensor))
 
     # and so are keypads.  Their value is the name of the last button pressed
     if not config.get(CONF_EXCLUDE_KEYPADS):
@@ -369,9 +373,12 @@ async def async_setup(hass, base_config):
     hass.services.async_register(DOMAIN, "dump_memory", async_handle_dump_memory)
     return True
 
-
 class VantageDevice(Entity):
-    """Representation of a Vantage device entity."""
+    """Representation of a Vantage device entity.
+
+    This is the base class for all the different types of
+    HASS objects, each of which will also descend from their
+    object-specific HASS base class."""
 
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the device."""
