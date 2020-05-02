@@ -214,7 +214,7 @@ class VantageLight(VantageDevice, Light):
             
         await self.async_update_ha_state()
 
-    async def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         self._set_ramp(**kwargs)
         self._vantage_device.level = 0
