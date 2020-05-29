@@ -313,16 +313,18 @@ async def async_setup(hass, base_config):
             continue
 
         if output.kind == "BLIND":
+            _LOGGER.debug("adding blind %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["cover"].append((area.name, output))
         elif output.kind == "RELAY":
+            _LOGGER.debug("adding switch %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["switch"].append((area.name, output))
         elif output.kind == "LIGHT":
-            _LOGGER.debug("adding light vid=%s to area=%s", output._vid, area.name)
+            _LOGGER.debug("adding light %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["light"].append((area.name, output))
         elif output.kind == "GROUP":
             _LOGGER.debug(
-                "adding group (of lights/relays) vid=%s to area=%s",
-                output._vid,
+                "adding group (of lights/relays) %s to area=%s",
+                output,
                 area.name,
             )
             hass.data[VANTAGE_DEVICES]["light"].append((area.name, output))
@@ -353,7 +355,7 @@ async def async_setup(hass, base_config):
 
     for sensor in vc.sensors:
         if should_keep_for_area_vid(sensor.area) and not is_excluded_name(sensor):
-            hass.data[VANTAGE_DEVICES][dom].append((sensor._area, sensor))
+            hass.data[VANTAGE_DEVICES]["sensor"].append((sensor._area, sensor))
 
     # and so are keypads.  Their value is the name of the last button pressed
     if not config.get(CONF_EXCLUDE_KEYPADS):
@@ -372,6 +374,7 @@ async def async_setup(hass, base_config):
     hass.services.async_register(DOMAIN, "call_task", async_handle_call_task)
     hass.services.async_register(DOMAIN, "dump_memory", async_handle_dump_memory)
     return True
+
 
 class VantageDevice(Entity):
     """Representation of a Vantage device entity.
