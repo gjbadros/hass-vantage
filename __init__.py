@@ -315,16 +315,18 @@ async def async_setup(hass, base_config):
             continue
 
         if output.kind == "BLIND":
+            _LOGGER.debug("adding blind %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["cover"].append((area.name, output))
         elif output.kind == "RELAY":
+            _LOGGER.debug("adding switch %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["switch"].append((area.name, output))
         elif output.kind == "LIGHT":
-            _LOGGER.debug("adding light vid=%s to area=%s", output._vid, area.name)
+            _LOGGER.debug("adding light %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["light"].append((area.name, output))
         elif output.kind == "GROUP":
             _LOGGER.debug(
-                "adding group (of lights/relays) vid=%s to area=%s",
-                output._vid,
+                "adding group (of lights/relays) %s to area=%s",
+                output,
                 area.name,
             )
             hass.data[VANTAGE_DEVICES]["light"].append((area.name, output))
@@ -335,7 +337,11 @@ async def async_setup(hass, base_config):
                 if config.get(
                     CONF_INCLUDE_UNDERSCORE_VARIABLES
                 ) or not var.name.startswith("_"):
-                    hass.data[VANTAGE_DEVICES]["sensor"].append((None, var))
+                    if var.kind == 'variable_bool':
+                        dom = "switch"
+                    else:
+                        dom = "sensor"
+                    hass.data[VANTAGE_DEVICES][dom].append((None, var))
 
     # buttons and dry contacts are are sensors too:
     # Their value is the name of the last action on them
@@ -373,7 +379,11 @@ async def async_setup(hass, base_config):
 
 
 class VantageDevice(Entity):
-    """Representation of a Vantage device entity."""
+    """Representation of a Vantage device entity.
+
+    This is the base class for all the different types of
+    HASS objects, each of which will also descend from their
+    object-specific HASS base class."""
 
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the device."""
