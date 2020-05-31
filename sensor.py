@@ -68,7 +68,7 @@ class VantageSensor(VantageDevice, RestoreEntity):
         if not state:
             _LOGGER.warning("no state retrieved for %s", self)
             return
-        _LOGGER.info("got state for %s = %s", self, state.state)
+        _LOGGER.debug("got state for %s = %s", self, state.state)
         self._vantage_device.set_initial_value(state.state)
 
     @property
@@ -103,6 +103,7 @@ class VantageSensor(VantageDevice, RestoreEntity):
 
         if self._vantage_device.kind == "button":
             button_pressed(self.hass, device)
+
 
 # TODO: this maybe could be just returning true for should_poll
 class VantagePollingSensor(VantageSensor):

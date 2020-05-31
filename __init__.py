@@ -33,6 +33,8 @@ CONF_EXCLUDE_KEYPADS = "exclude_keypads"
 CONF_EXCLUDE_VARIABLES = "exclude_variables"
 CONF_INCLUDE_UNDERSCORE_VARIABLES = "include_underscore_variables"
 CONF_EXCLUDE_NAME_SUBSTRING = "exclude_name_substring"
+CONF_LOG_COMMUNICATIONS = "log_communications"
+CONF_NUM_CONNECTIONS = "num_connections"
 CONF_NAME_MAPPINGS = "name_mappings"
 CONF_AREA = "area"
 CONF_TO = "to"
@@ -53,6 +55,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ONLY_AREAS): cv.string,
                 vol.Optional(CONF_EXCLUDE_AREAS): cv.string,
                 vol.Optional(CONF_EXCLUDE_NAME_SUBSTRING): cv.string,
+                vol.Optional(CONF_LOG_COMMUNICATIONS, default=False): cv.boolean,
+                vol.Optional(CONF_NUM_CONNECTIONS, default=1): cv.positive_int,
                 vol.Optional(CONF_INCLUDE_BUTTONS, default=False): cv.boolean,
                 vol.Optional(CONF_EXCLUDE_CONTACTS, default=False): cv.boolean,
                 vol.Optional(CONF_EXCLUDE_KEYPADS, default=False): cv.boolean,
@@ -216,6 +220,9 @@ async def async_setup(hass, base_config):
         3001,
         2001,
         name_mappings,
+        None,
+        config.get(CONF_LOG_COMMUNICATIONS),
+        config.get(CONF_NUM_CONNECTIONS)
     )
 
     vc = hass.data[VANTAGE_CONTROLLER]
@@ -306,16 +313,18 @@ async def async_setup(hass, base_config):
             continue
 
         if output.kind == "BLIND":
+            _LOGGER.debug("adding blind %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["cover"].append((area.name, output))
         elif output.kind == "RELAY":
+            _LOGGER.debug("adding switch %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["switch"].append((area.name, output))
         elif output.kind == "LIGHT":
-            _LOGGER.debug("adding light vid=%s to area=%s", output._vid, area.name)
+            _LOGGER.debug("adding light %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["light"].append((area.name, output))
         elif output.kind == "GROUP":
             _LOGGER.debug(
-                "adding group (of lights/relays) vid=%s to area=%s",
-                output._vid,
+                "adding group (of lights/relays) %s to area=%s",
+                output,
                 area.name,
             )
             hass.data[VANTAGE_DEVICES]["light"].append((area.name, output))
@@ -326,7 +335,11 @@ async def async_setup(hass, base_config):
                 if config.get(
                     CONF_INCLUDE_UNDERSCORE_VARIABLES
                 ) or not var.name.startswith("_"):
-                    hass.data[VANTAGE_DEVICES]["sensor"].append((None, var))
+                    if var.kind == 'variable_bool':
+                        dom = "switch"
+                    else:
+                        dom = "sensor"
+                    hass.data[VANTAGE_DEVICES][dom].append((None, var))
 
     # buttons and dry contacts are are sensors too:
     # Their value is the name of the last action on them
@@ -364,7 +377,11 @@ async def async_setup(hass, base_config):
 
 
 class VantageDevice(Entity):
-    """Representation of a Vantage device entity."""
+    """Representation of a Vantage device entity.
+
+    This is the base class for all the different types of
+    HASS objects, each of which will also descend from their
+    object-specific HASS base class."""
 
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the device."""
@@ -408,7 +425,7 @@ class VantageDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = self._vantage_device._extra_info.copy()
-        attr["Vantage Integration ID"] = self._vantage_device.id
+        attr["vantage_id"] = self._vantage_device.id
         if self.kind is not None:
-            attr["Vantage Kind"] = self.kind
+            attr["vantage_kind"] = self.kind
         return attr
