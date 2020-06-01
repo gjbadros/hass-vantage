@@ -335,7 +335,7 @@ async def async_setup(hass, base_config):
                 if config.get(
                     CONF_INCLUDE_UNDERSCORE_VARIABLES
                 ) or not var.name.startswith("_"):
-                    if var.kind == 'variable_bool':
+                    if var.kind == 'variable_bool' and not var.name.lower().endswith("_p"):
                         dom = "switch"
                     else:
                         dom = "sensor"

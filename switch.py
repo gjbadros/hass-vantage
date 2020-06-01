@@ -51,7 +51,7 @@ class VantageVariableSwitch(VantagePollingSensor, SwitchDevice):
 
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the sensor."""
-        _LOGGER.info("SwitchSensor = %s", vantage_device)
+        _LOGGER.debug("SwitchSensor = %s", vantage_device)
         VantagePollingSensor.__init__(self,
                                       area_name, vantage_device, controller)
 
