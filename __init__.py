@@ -389,6 +389,8 @@ class VantageDevice(Entity):
         self._controller = controller
         self._area_name = area_name
         self._unique_id = "vantagevid-{}".format(vantage_device.vid)
+        self._unit_of_measurement = None
+        self._device_class = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -412,6 +414,16 @@ class VantageDevice(Entity):
         return self._unique_id
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement for this sensor."""
+        return self._unit_of_measurement
+
+    @property
+    def device_class(self):
+        """Return the device class for this sensor."""
+        return self._device_class
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
@@ -428,4 +440,5 @@ class VantageDevice(Entity):
         attr["vantage_id"] = self._vantage_device.id
         if self.kind is not None:
             attr["vantage_kind"] = self.kind
+        attr["unit_of_measurement"] = self.unit_of_measurement
         return attr
