@@ -13,6 +13,9 @@ import logging
 # to use hass state to keep track of them between reboots
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from homeassistant.const import (
+    DEVICE_CLASS_ILLUMINANCE,
+)
 from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER, button_pressed
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,9 +57,9 @@ class VantageSensor(VantageDevice, RestoreEntity):
         if k == "current":
             self._unit_of_measurement = "amp"
             self._device_class = "power"
-        if k == "light":
+        if k == "lightsensor":
             self._unit_of_measurement = "lm"
-            self._device_class = "illuminance"
+            self._device_class = DEVICE_CLASS_ILLUMINANCE
         _LOGGER.debug(
             "Created sensor (%s): %s", vantage_device.kind, vantage_device.name
         )
@@ -86,16 +89,6 @@ class VantageSensor(VantageDevice, RestoreEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement for this sensor."""
-        return self._unit_of_measurement
-
-    @property
-    def device_class(self):
-        """Return the device class for this sensor."""
-        return self._device_class
 
     def _update_callback(self, device):
         """Run when invoked by pyvantage when the device state changes."""

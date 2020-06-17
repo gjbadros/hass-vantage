@@ -119,9 +119,13 @@ def button_pressed(hass, button):
         'keypad_name':   slugify(button.keypad_name),
         'keypad_vid':    button.keypad_vid
     }
-    if button.value == "PRESS":
+    if button._keypad is not None:
+        payload['keypad_name'] = slugify(button._keypad.name)
+        payload['keypad_vid'] = button._parent
+
+    if button.value == "PRESS" or button.value == "Violated":
         hass.bus.fire('vantage_button_pressed', payload)
-    elif button.value == "RELEASE":
+    elif button.value == "RELEASE" or button.value == "Normal":
         hass.bus.fire('vantage_button_released', payload)
     else:
         _LOGGER.warning("Unexpected state for button %s: %s",
@@ -335,7 +339,7 @@ async def async_setup(hass, base_config):
                 if config.get(
                     CONF_INCLUDE_UNDERSCORE_VARIABLES
                 ) or not var.name.startswith("_"):
-                    if var.kind == 'variable_bool':
+                    if var.kind == 'variable_bool' and not var.name.lower().endswith("_p"):
                         dom = "switch"
                     else:
                         dom = "sensor"
@@ -389,6 +393,8 @@ class VantageDevice(Entity):
         self._controller = controller
         self._area_name = area_name
         self._unique_id = "vantagevid-{}".format(vantage_device.vid)
+        self._unit_of_measurement = None
+        self._device_class = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -412,6 +418,16 @@ class VantageDevice(Entity):
         return self._unique_id
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement for this sensor."""
+        return self._unit_of_measurement
+
+    @property
+    def device_class(self):
+        """Return the device class for this sensor."""
+        return self._device_class
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
@@ -428,4 +444,5 @@ class VantageDevice(Entity):
         attr["vantage_id"] = self._vantage_device.id
         if self.kind is not None:
             attr["vantage_kind"] = self.kind
+        attr["unit_of_measurement"] = self.unit_of_measurement
         return attr
