@@ -31,6 +31,7 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
 )
 
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.service import async_extract_entity_ids
 
 from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
@@ -38,7 +39,7 @@ from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
 _LOGGER = logging.getLogger(__name__)
 
 VANTAGE_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA
-SERVICE_VANTAGE_SET_STATE = "vantage_set_state"
+SERVICE_VANTAGE_SET_STATE = "set_state"
 
 DEPENDENCIES = ["vantage"]
 
@@ -66,11 +67,10 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         devs.append(dev)
 
     async_add_devices(devs, True)
-    hass.services.async_register(
-        DOMAIN,
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
         SERVICE_VANTAGE_SET_STATE,
-        async_handle_set_state,
-        schema=VANTAGE_SET_STATE_SCHEMA,
+        VANTAGE_SET_STATE_SCHEMA, "set_state"
     )
     return True
 
@@ -145,9 +145,10 @@ class VantageLight(VantageDevice, Light):
     @property
     def hs_color(self):
         """Return the HS color value."""
-        rgb = self._vantage_device.rgb
-        hs = color_RGB_to_hs(*rgb)
-        return hs  # self._vantage_device.hs
+        #  rgb = self._vantage_device.rgb
+        # hs = color_RGB_to_hs(*rgb)
+        # return hs  # self._vantage_device.hs
+        return self._vantage_device.hs
 
     def _set_level(self, brightness):
         """Set the level, including other dirty properties."""
@@ -186,8 +187,9 @@ class VantageLight(VantageDevice, Light):
         elif ATTR_HS_COLOR in kwargs:
             _LOGGER.debug("%s set via ATTR_HS_COLOR", self)
             hs_color = kwargs[ATTR_HS_COLOR]
-            rgb = color_hs_to_RGB(*hs_color)
-            self._vantage_device.rgb = [*rgb]
+            # rgb = color_hs_to_RGB(*hs_color)
+            # self._vantage_device.rgb = [*rgb]
+            self._vantage_device.hs = hs_color
         elif ATTR_COLOR_TEMP in kwargs or ATTR_KELVIN in kwargs:
             if ATTR_KELVIN in kwargs:
                 _LOGGER.debug(
