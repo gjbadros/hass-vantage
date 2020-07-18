@@ -6,7 +6,7 @@ https://home-assistant.io/components/light.vantage/
 """
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
@@ -46,7 +46,7 @@ def to_hass_level(level):
     return int((level * 255) / 100)
 
 
-class VantageVariableSwitch(VantagePollingSensor, SwitchDevice):
+class VantageVariableSwitch(VantagePollingSensor, SwitchEntity):
     """Represents a boolean variable sensor as a switch."""
 
     def __init__(self, area_name, vantage_device, controller):
@@ -76,7 +76,7 @@ class VantageVariableSwitch(VantagePollingSensor, SwitchDevice):
         return self._vantage_device.value
 
 
-class VantageSwitch(VantageDevice, SwitchDevice):
+class VantageSwitch(VantageDevice, SwitchEntity):
     """Representation of a Vantage Switch (not dimmable)."""
 
     def __init__(self, area_name, vantage_device, controller):

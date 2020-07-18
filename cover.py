@@ -7,7 +7,7 @@ https://home-assistant.io/components/cover.vantage/
 import logging
 
 from homeassistant.components.cover import (
-    CoverDevice,
+    CoverEntity,
     SUPPORT_OPEN,
     SUPPORT_CLOSE,
     SUPPORT_STOP,
@@ -33,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     return True
 
 
-class VantageCover(VantageDevice, CoverDevice):
+class VantageCover(VantageDevice, CoverEntity):
     """Representation of a Vantage shade."""
 
     @property

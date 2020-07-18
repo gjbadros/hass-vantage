@@ -20,7 +20,7 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LIGHT_TURN_ON_SCHEMA,
     DOMAIN,
-    Light,
+    LightEntity,
 )
 
 from homeassistant.util.color import (
@@ -85,7 +85,7 @@ def to_hass_level(level):
     return int((level * 255) / 100)
 
 
-class VantageLight(VantageDevice, Light):
+class VantageLight(VantageDevice, LightEntity):
     """Representation of a Vantage Light, including dimmable."""
 
     def __init__(self, area_name, vantage_device, controller):
