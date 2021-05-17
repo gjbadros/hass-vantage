@@ -1,6 +1,7 @@
 {
   "domain": "vantage",
   "name": "Vantage",
+  "version": "0.5",
   "documentation": "https://github.com/gjbadros/hass-vantage",
   "requirements": [
     "pyvantage==0.0.38",
