@@ -436,8 +436,8 @@ class VantageDevice(Entity):
         return self._vantage_device.kind
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
         attr = self._vantage_device._extra_info.copy()
         attr["vantage_id"] = self._vantage_device.id
         if self.kind is not None:
