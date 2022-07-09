@@ -368,7 +368,7 @@ async def async_setup(hass, base_config):
             if should_keep_for_area_vid(keypad.area) and not is_excluded_name(keypad):
                 hass.data[VANTAGE_DEVICES]["sensor"].append((None, keypad))
 
-    for component in ("light", "cover", "sensor", "switch"):
+    for component in ("light", "cover", "sensor", "switch","fan"):
         await discovery.async_load_platform(hass, component, DOMAIN, None, base_config)
 
     hass.services.async_register(

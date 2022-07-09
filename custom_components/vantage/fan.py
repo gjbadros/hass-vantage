@@ -2,17 +2,28 @@ import logging
 
 from homeassistant.components.fan import (
     FanEntity,
+    FanEntityFeature,
     ATTR_PERCENTAGE,
-    SUPPORT_SET_SPEED
+    SUPPORT_SET_SPEED,
+    SERVICE_TURN_ON,
+    SERVICE_SET_PERCENTAGE
 )
+
+import voluptuous as vol
+
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.service import async_extract_entity_ids
+
 from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
 
 _LOGGER = logging.getLogger(__name__)
 
+VANTAGE_SET_STATE_SCHEMA = SERVICE_TURN_ON
+SERVICE_VANTAGE_SET_STATE = "set_state"
+
 DEPENDENCIES = ["vantage"]
 
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Vantage lights."""
 
     devs = []
 
@@ -23,8 +34,23 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     async_add_devices(devs, True)
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        SERVICE_VANTAGE_SET_STATE,
-        VANTAGE_SET_STATE_SCHEMA, "set_state"
+        SERVICE_TURN_ON,
+        {
+            vol.Optional(ATTR_PERCENTAGE): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
+        "async_turn_on",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_PERCENTAGE,
+        {
+            vol.Required(ATTR_PERCENTAGE): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
+        "async_set_percentage",
+        [FanEntityFeature.SET_SPEED],
     )
     return True
 
@@ -63,18 +89,18 @@ class VantageFan(VantageDevice, FanEntity):
     async def set_state(self, **kwargs):
         _LOGGER.debug("fan.set_state(%s) to %s",
                       self._vantage_device, kwargs)
-        self._set_level(kwargs[ATTR_PERCENTAGE])
+        self.set_percentage(kwargs[ATTR_PERCENTAGE])
         await self.async_set_percentage(kwargs[ATTR_PERCENTAGE])
         #await self.async_update_ha_state()
     
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         self._vantage_device.level = 0
-        await self.async_update_ha_state()
+        await self.async_update_ha_state()       
 
-    def _set_level(self, brightness):
-        """Set the level, including other dirty properties."""
-        self._vantage_device.level = to_vantage_level(brightness)        
+    def set_percentage(self, percentage: int) -> None:
+        """Set the speed of the fan, as a percentage."""
+        self._vantage_device.level = to_vantage_level(percentage)
 
     @property
     def is_on(self):
