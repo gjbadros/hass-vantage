@@ -185,7 +185,7 @@ async def async_setup(hass, base_config):
 
     hass.data[VANTAGE_CONTROLLER] = None
     hass.data[VANTAGE_DEVICES] = {"light": [], "cover": [],
-                                  "sensor": [], "switch": []}
+                                  "sensor": [], "switch": [], "fan": []}
 
     config = base_config.get(DOMAIN)
     only_areas = config.get(CONF_ONLY_AREAS)
@@ -323,6 +323,9 @@ async def async_setup(hass, base_config):
         elif output.kind == "LIGHT":
             _LOGGER.debug("adding light %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["light"].append((area.name, output))
+        elif output.kind == "FAN":
+            _LOGGER.debug("adding fan %s to area=%s", output, area.name)
+            hass.data[VANTAGE_DEVICES]["fan"].append((area.name, output))            
         elif output.kind == "GROUP":
             _LOGGER.debug(
                 "adding group (of lights/relays) %s to area=%s",
