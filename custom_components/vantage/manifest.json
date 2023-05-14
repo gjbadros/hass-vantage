@@ -4,7 +4,7 @@
   "version": "0.6",
   "documentation": "https://github.com/gjbadros/hass-vantage",
   "requirements": [
-    "pyvantage==0.0.47",
+    "pyvantage==0.0.48",
     "pympler==0.8"
   ],
   "dependencies": [],
