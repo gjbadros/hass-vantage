@@ -183,6 +183,14 @@ async def async_setup(hass, base_config):
         """Run when invoked by pyvantage when the device state changes."""
         button_pressed(hass, device)
 
+    hass.services.async_register(
+        DOMAIN, "set_variable_vid", async_handle_set_variable_vid
+    )
+    hass.services.async_register(DOMAIN, "call_task_vid", async_handle_call_task_vid)
+    hass.services.async_register(DOMAIN, "set_variable", async_handle_set_variable)
+    hass.services.async_register(DOMAIN, "call_task", async_handle_call_task)
+    hass.services.async_register(DOMAIN, "dump_memory", async_handle_dump_memory)
+
     hass.data[VANTAGE_CONTROLLER] = None
     hass.data[VANTAGE_DEVICES] = {"light": [], "cover": [],
                                   "sensor": [], "switch": []}
@@ -368,13 +376,6 @@ async def async_setup(hass, base_config):
     for component in ("light", "cover", "sensor", "switch"):
         await discovery.async_load_platform(hass, component, DOMAIN, None, base_config)
 
-    hass.services.async_register(
-        DOMAIN, "set_variable_vid", async_handle_set_variable_vid
-    )
-    hass.services.async_register(DOMAIN, "call_task_vid", async_handle_call_task_vid)
-    hass.services.async_register(DOMAIN, "set_variable", async_handle_set_variable)
-    hass.services.async_register(DOMAIN, "call_task", async_handle_call_task)
-    hass.services.async_register(DOMAIN, "dump_memory", async_handle_dump_memory)
     return True
 
 
