@@ -395,8 +395,7 @@ class VantageDevice(Entity):
         self._unit_of_measurement = None
         self._device_class = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.async_add_job(
             self._controller.subscribe, self._vantage_device, self._update_callback
