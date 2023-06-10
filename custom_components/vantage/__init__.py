@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 VANTAGE_CONTROLLER = "vantage_controller"
 VANTAGE_DEVICES = "vantage_devices"
 
+CONF_USE_SSL = "use_ssl"
 CONF_ONLY_AREAS = "only_areas"
 CONF_ENABLE_CACHE = "enable_cache"
 CONF_EXCLUDE_AREAS = "exclude_areas"
@@ -66,6 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ENABLE_CACHE,
                              default=False): cv.boolean,  # FIXME
                 vol.Optional(CONF_NAME_MAPPINGS): NAME_MAPPINGS_SCHEMA,
+                vol.Optional(CONF_USE_SSL, default=False): cv.boolean,
             }
         )
     },
@@ -221,14 +223,16 @@ async def async_setup(hass, base_config):
         password = config[CONF_PASSWORD]
         _LOGGER.info("Username is %s", username)
 
+    use_ssl_connection = config.get(CONF_USE_SSL, False)
+
     hass.data[VANTAGE_CONTROLLER] = Vantage(
         config[CONF_HOST],
         username,
         password,
         only_areas,
         exclude_areas,
-        3001,
-        2001,
+        3010 if use_ssl_connection else 3001,
+        2010 if use_ssl_connection else 2001,
         name_mappings,
         None,
         config.get(CONF_LOG_COMMUNICATIONS),
