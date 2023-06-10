@@ -4,17 +4,15 @@ Component for interacting with a Vantage Infusion Controller system
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/vantage/
 """
-import asyncio
-import logging
 import functools
-
-import voluptuous as vol
+import logging
 
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import Event
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.core import Event
 from homeassistant.util import slugify
 
 DOMAIN = "vantage"
@@ -351,7 +349,7 @@ async def async_setup(hass, base_config):
                         dom = "sensor"
                     hass.data[VANTAGE_DEVICES][dom].append((None, var))
 
-    # buttons and dry contacts are are sensors too:
+    # buttons and dry contacts are sensors too:
     # Their value is the name of the last action on them
     for button in vc.buttons:
         if (button.kind == "button" and config.get(CONF_INCLUDE_BUTTONS)) or (
@@ -397,7 +395,7 @@ class VantageDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_job(
+        await self.hass.async_add_job(
             self._controller.subscribe, self._vantage_device, self._update_callback
         )
 

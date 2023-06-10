@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.vantage/
 """
 import logging
-import asyncio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -19,20 +18,15 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
     LIGHT_TURN_ON_SCHEMA,
-    DOMAIN,
     LightEntity,
 )
-
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.util.color import (
-    color_hs_to_RGB,
     color_temperature_to_rgb,
-    color_RGB_to_hs,
     color_temperature_mired_to_kelvin,
     color_temperature_kelvin_to_mired,
 )
-
-from homeassistant.helpers import entity_platform
-from homeassistant.helpers.service import async_extract_entity_ids
 
 from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
 

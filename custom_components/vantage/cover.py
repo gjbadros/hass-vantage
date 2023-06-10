@@ -37,6 +37,7 @@ class VantageCover(VantageDevice, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         return CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP | CoverEntityFeature.SET_POSITION
+
     @property
     def is_closed(self):
         """Return if the cover is closed."""
