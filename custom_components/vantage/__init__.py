@@ -236,7 +236,8 @@ async def async_setup(hass, base_config):
         name_mappings,
         None,
         config.get(CONF_LOG_COMMUNICATIONS),
-        config.get(CONF_NUM_CONNECTIONS)
+        config.get(CONF_NUM_CONNECTIONS),
+        use_ssl=use_ssl_connection
     )
 
     vc = hass.data[VANTAGE_CONTROLLER]
