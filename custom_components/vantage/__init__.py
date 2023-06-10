@@ -38,6 +38,7 @@ CONF_NUM_CONNECTIONS = "num_connections"
 CONF_NAME_MAPPINGS = "name_mappings"
 CONF_AREA = "area"
 CONF_TO = "to"
+CONF_USE_SSL = "use_ssl"
 
 NAME_MAPPING_SCHEMA = vol.Schema(
     {vol.Required(CONF_AREA): cv.string, vol.Required(CONF_TO): cv.string}
@@ -66,6 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ENABLE_CACHE,
                              default=False): cv.boolean,  # FIXME
                 vol.Optional(CONF_NAME_MAPPINGS): NAME_MAPPINGS_SCHEMA,
+                vol.Optional(CONF_USE_SSL, default=False): cv.boolean,
             }
         )
     },
@@ -221,18 +223,33 @@ async def async_setup(hass, base_config):
         password = config[CONF_PASSWORD]
         _LOGGER.info("Username is %s", username)
 
+    # Connect using SSL on SSL ports if SSL is enabled
+    use_ssl = False
+    cmd_port = 3001
+    file_port = 2001
+    if CONF_USE_SSL in config:
+        use_ssl = config[CONF_USE_SSL]
+    if use_ssl:
+        cmd_port = 3010
+        file_port = 2010
+        _LOGGER.info("Connecting to %s on port %d and %d using SSL.", config[CONF_HOST], cmd_port, file_port)
+    else:
+        _LOGGER.info("Connecting to %s on port %d and %d.", config[CONF_HOST], cmd_port, file_port)
+
     hass.data[VANTAGE_CONTROLLER] = Vantage(
         config[CONF_HOST],
         username,
         password,
         only_areas,
         exclude_areas,
-        3001,
-        2001,
+        cmd_port,
+        file_port,
         name_mappings,
         None,
         config.get(CONF_LOG_COMMUNICATIONS),
-        config.get(CONF_NUM_CONNECTIONS)
+        config.get(CONF_NUM_CONNECTIONS),
+        True,
+        use_ssl
     )
 
     vc = hass.data[VANTAGE_CONTROLLER]

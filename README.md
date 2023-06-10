@@ -25,46 +25,40 @@ If you have something that is not supported by Vantage, you can either:
 
 ## Setup
 
-I use the following script to setup pyvantage and the vantage custom component.  
-You'll have to tweak it based on how you have Home Assistant set up.
+Install the custom component in your HA `/config/custom_components/vantage` directory.  
+There are multiple ways to do this, following is an example:
 
 ```shell
-    # First download pyvantage and add it to homeassistant.  Installs pyvantage
-    # in the current directory and assumes home-assistant is in
-    # ./home-assistant:
+# Change to your HA /config directory
+ls -la
 
-    git clone https://github.com/colohan/pyvantage.git
-    cd pyvantage
-    git remote add upstream https://github.com/gjbadros/pyvantage.git
-    cd ..
+# Create a 3rd party directory
+mkdir 3rdparty
 
-    cd home-assistant
-    python3 -m venv venv
-    source venv/bin/activate
+# Download the custom component from GitHub
+wget -O ./3rdparty/vantage.zip https://github.com/gjbadros/hass-vantage/archive/refs/heads/master.zip
 
-    # If we want to edit pyvantage, we install it from a local mirror of the git
-    # repo:
-    cd ../pyvantage
-    pip3 install --editable .
+# Extract zip contents
+unzip ./3rdparty/vantage.zip -d ./3rdparty/vantage
 
-    cd ../home-assistant
-    script/setup
-
-    # Now install the vantage custom component:
-
-    cd ~/.homeassistant/custom_components
-    git clone https://github.com/colohan/hass-vantage.git vantage
-    cd vantage
-    git remote add upstream https://github.com/gjbadros/hass-vantage.git
+# Copy to custom_components
+mkdir -p custom_components/vantage
+cp -r ./3rdparty/vantage/hass-vantage-master/custom_components/vantage/ ./custom_components/
 ```
 
-And add something like the following to configuration.yaml:
+## Configuration
+
+And add something like the following to the HA configuration.yaml:
 
 ```yaml
 vantage:
   host: 192.168.0.123
+  # Optional, required if running a security enabled controller
   username: !secret vantage_username
   password: !secret vantage_password
+  # Optional, set to True if running a SSL enabled controller
+  use_ssl: True
+  # Optional, see additional configuration options
   exclude_areas: "SPARE RELAYS"
 ```
 
@@ -75,13 +69,32 @@ vantage_username: [my_username]
 vantage_password: [my_password]
 ```
 
+Configuration parameters:
+
+- `host` (Required string): IP address or FQDN of the controller.
+- `username` (Optional string): Username
+- `password` (Optional string): Password
+- `use_ssl` (Default `False`): Controllers running v4+ firmware supports SSL on ports 2010 and 3010, non-SSL ports are 2001 and 3001.
+- `only_areas` (Optional comma separated string): Only include these areas, inverse of `exclude_areas` option.
+- `enable_cache` (Default `False`): Read the configuration once and write it to a configuration file, read from the configuration file in future. If any changes are made to configuration in design Center the file must be manually deleted.
+- `exclude_areas` (Optional comma separated string): Exclude these areas, inverse of `only_areas` option.
+- `include_buttons` (Default `False`): Create sensors for every keypad button.
+- `exclude_contacts` (Default `False`): Exclude contacts.
+- `exclude_keypads` (Default `False`): Exclude keypads.
+- `exclude_variables` (Default `False`): Exclude variables.
+- `include_underscore_variables` (Default `False`): Include variables prefixed with `_`.
+- `exclude_name_substring` (Optional comma separated string): Exclude objects with names matching substrings
+- `log_communications` (Default `False`): Log controller communications.
+- `num_connections` (Default `1`): Number of controller connections.
+- `name_mappings`: See later example, array of area name re-mappings.
+
 And then restart home assistant.
 
 Notes:
 
-- The specified user must be in group Admin and have "Read State", "Write State" and "Read Config" permissions to work. See "Settings->Project Security" in Vantage Design Center.
-- If your Vantage system is not set up with a username and password you can elide the `username:` and `password:` lines in the configuration.yaml file, and skip setting up secrets.yaml. Or, just add a password to your Vantage!
-- If your Home Assistant can't talk to Vantage over the network, it can't work. If you have a firewall configure it to let the connections on ports 2001 and 3001 through.
+- The specified `username` must be in group Admin and have "Read State", "Write State" and "Read Config" permissions to work. See "Settings->Project Security" in Vantage Design Center.
+- If your Vantage system is not set up with a username and password you can elide the `username` and `password` lines in the configuration.yaml file, and skip setting up secrets.yaml. Or, just add a password to your Vantage!
+- If your Home Assistant can't talk to Vantage over the network, it can't work. If you have a firewall configure it to let the connections on ports 2001/2010 and 3001/3010 through.
 
 ## Usage
 
@@ -158,8 +171,7 @@ These names are very long. If you want shorter Entity names, you can do one of t
 
 Note that unless you delete the entity registry and rebuild it (as described above) this will only rename the friendly names of entities and not the entity name.
 
-In some cases the Vantage component uses object names to infer functionality, since the Vantage metadata makes it hard to determine. If a light's name ends in ` COLOR` it is assumed to be a color load. If the load type is `High Voltage
-Relay` then it assumes it is a switch and not a light.
+In some cases the Vantage component uses object names to infer functionality, since the Vantage metadata makes it hard to determine. If a light's name ends in `xxx COLOR` it is assumed to be a color load. If the load type is `High Voltage Relay` then it assumes it is a switch and not a light.
 
 ## Grouping Lights
 

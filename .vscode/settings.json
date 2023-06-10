@@ -11,6 +11,7 @@
         "muppy",
         "pympler",
         "pyvantage",
+        "rdparty",
         "vantagevid",
         "venv"
     ]
