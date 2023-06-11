@@ -1,11 +1,11 @@
 #!/bin/sh -
-# This assumes the repo is cloned to a home directory that has a config
-# subdirectory and this script is run with
+# This assumes the repo is cloned to the config directory
+# and this script is run from the directory containing it.
 # ./copy-to-config.sh
-if [ -d ../config/custom_components ]; then
-  mkdir ../config/custom_components/vantage 2> /dev/null
-  cp custom_components/vantage/* ../config/custom_components/vantage
+if [ -d ../custom_components ]; then
+  mkdir ../custom_components/vantage 2> /dev/null
+  cp custom_components/vantage/* ../custom_components/vantage
 else
-  echo "Directory ../config/custom_components does not exist"
+  echo "Directory ../custom_components does not exist"
 fi
 

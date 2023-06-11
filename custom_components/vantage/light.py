@@ -208,13 +208,13 @@ class VantageLight(VantageDevice, LightEntity):
                 self._vantage_device.rgb = [*rgb]
             self._vantage_device.color_temp = kelvin
             
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         self._set_ramp(**kwargs)
         self._vantage_device.level = 0
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self):
