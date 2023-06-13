@@ -391,8 +391,11 @@ class VantageDevice(Entity):
     HASS objects, each of which will also descend from their
     object-specific HASS base class."""
 
+    _attr_should_poll = False
+
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the device."""
+
         self._vantage_device = vantage_device
         self._controller = controller
         self._area_name = area_name
@@ -408,7 +411,7 @@ class VantageDevice(Entity):
 
     def _update_callback(self, _device):
         """Run when invoked by pyvantage when the device state changes."""
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def name(self):
@@ -430,10 +433,6 @@ class VantageDevice(Entity):
         """Return the device class for this sensor."""
         return self._device_class
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def kind(self):
@@ -447,5 +446,6 @@ class VantageDevice(Entity):
         attr["vantage_id"] = self._vantage_device.id
         if self.kind is not None:
             attr["vantage_kind"] = self.kind
-        attr["unit_of_measurement"] = self.unit_of_measurement
+        if self.unit_of_measurement is not None:
+            attr["unit_of_measurement"] = self.unit_of_measurement
         return attr
