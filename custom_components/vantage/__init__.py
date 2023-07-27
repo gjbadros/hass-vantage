@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 VANTAGE_CONTROLLER = "vantage_controller"
 VANTAGE_DEVICES = "vantage_devices"
 
+CONF_USE_SSL = "use_ssl"
 CONF_ONLY_AREAS = "only_areas"
 CONF_ENABLE_CACHE = "enable_cache"
 CONF_EXCLUDE_AREAS = "exclude_areas"
@@ -66,6 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ENABLE_CACHE,
                              default=False): cv.boolean,  # FIXME
                 vol.Optional(CONF_NAME_MAPPINGS): NAME_MAPPINGS_SCHEMA,
+                vol.Optional(CONF_USE_SSL, default=False): cv.boolean,
             }
         )
     },
@@ -183,6 +185,14 @@ async def async_setup(hass, base_config):
         """Run when invoked by pyvantage when the device state changes."""
         button_pressed(hass, device)
 
+    hass.services.async_register(
+        DOMAIN, "set_variable_vid", async_handle_set_variable_vid
+    )
+    hass.services.async_register(DOMAIN, "call_task_vid", async_handle_call_task_vid)
+    hass.services.async_register(DOMAIN, "set_variable", async_handle_set_variable)
+    hass.services.async_register(DOMAIN, "call_task", async_handle_call_task)
+    hass.services.async_register(DOMAIN, "dump_memory", async_handle_dump_memory)
+
     hass.data[VANTAGE_CONTROLLER] = None
     hass.data[VANTAGE_DEVICES] = {"light": [], "cover": [],
                                   "sensor": [], "switch": [], "fan": []}
@@ -213,18 +223,21 @@ async def async_setup(hass, base_config):
         password = config[CONF_PASSWORD]
         _LOGGER.info("Username is %s", username)
 
+    use_ssl_connection = config.get(CONF_USE_SSL, False)
+
     hass.data[VANTAGE_CONTROLLER] = Vantage(
         config[CONF_HOST],
         username,
         password,
         only_areas,
         exclude_areas,
-        3001,
-        2001,
+        3010 if use_ssl_connection else 3001,
+        2010 if use_ssl_connection else 2001,
         name_mappings,
         None,
         config.get(CONF_LOG_COMMUNICATIONS),
-        config.get(CONF_NUM_CONNECTIONS)
+        config.get(CONF_NUM_CONNECTIONS),
+        use_ssl=use_ssl_connection
     )
 
     vc = hass.data[VANTAGE_CONTROLLER]
@@ -371,13 +384,6 @@ async def async_setup(hass, base_config):
     for component in ("light", "cover", "sensor", "switch","fan"):
         await discovery.async_load_platform(hass, component, DOMAIN, None, base_config)
 
-    hass.services.async_register(
-        DOMAIN, "set_variable_vid", async_handle_set_variable_vid
-    )
-    hass.services.async_register(DOMAIN, "call_task_vid", async_handle_call_task_vid)
-    hass.services.async_register(DOMAIN, "set_variable", async_handle_set_variable)
-    hass.services.async_register(DOMAIN, "call_task", async_handle_call_task)
-    hass.services.async_register(DOMAIN, "dump_memory", async_handle_dump_memory)
     return True
 
 
@@ -388,8 +394,11 @@ class VantageDevice(Entity):
     HASS objects, each of which will also descend from their
     object-specific HASS base class."""
 
+    _attr_should_poll = False
+
     def __init__(self, area_name, vantage_device, controller):
         """Initialize the device."""
+
         self._vantage_device = vantage_device
         self._controller = controller
         self._area_name = area_name
@@ -397,8 +406,7 @@ class VantageDevice(Entity):
         self._unit_of_measurement = None
         self._device_class = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.async_add_job(
             self._controller.subscribe, self._vantage_device, self._update_callback
@@ -406,7 +414,7 @@ class VantageDevice(Entity):
 
     def _update_callback(self, _device):
         """Run when invoked by pyvantage when the device state changes."""
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def name(self):
@@ -428,10 +436,6 @@ class VantageDevice(Entity):
         """Return the device class for this sensor."""
         return self._device_class
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def kind(self):
@@ -445,5 +449,6 @@ class VantageDevice(Entity):
         attr["vantage_id"] = self._vantage_device.id
         if self.kind is not None:
             attr["vantage_kind"] = self.kind
-        attr["unit_of_measurement"] = self.unit_of_measurement
+        if self.unit_of_measurement is not None:
+            attr["unit_of_measurement"] = self.unit_of_measurement
         return attr

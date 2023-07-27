@@ -8,10 +8,7 @@ import logging
 
 from homeassistant.components.cover import (
     CoverEntity,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_STOP,
-    SUPPORT_SET_POSITION,
+    CoverEntityFeature,
     ATTR_POSITION,
 )
 from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER
@@ -39,8 +36,7 @@ class VantageCover(VantageDevice, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
-
+        return CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP | CoverEntityFeature.SET_POSITION
     @property
     def is_closed(self):
         """Return if the cover is closed."""

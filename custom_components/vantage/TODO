@@ -1,12 +1,11 @@
-* Custom fluxer's use of vantage_set_state and lifx_set_state are not working reliably to change color when lights are off.
+- Custom fluxer's use of vantage_set_state and lifx_set_state are not working reliably to change color when lights are off.
 
-* Make follow async style: https://developers.home-assistant.io/docs/en/asyncio_working_with_async.html
+- Make follow async style: https://developers.home-assistant.io/docs/en/asyncio_working_with_async.html
 
-* Switch to using proper yaml for exclude_name_substring, exclude_areas, only_areas.
+- Switch to using proper yaml for exclude_name_substring, exclude_areas, only_areas.
 
-* Document priority of exclude_areas vs. only_areas.
+- Document priority of exclude_areas vs. only_areas.
 
-* add only_name_substring (or include_name_string) to exclude everything else by default.
+- add only_name_substring (or include_name_string) to exclude everything else by default.
 
-* Switch to an Integration Configuration style (instead of all in configuration.yaml): https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html
-
+- Switch to an Integration Configuration style (instead of all in configuration.yaml): https://developers.home-assistant.io/docs/en/config_entries_config_flow_handler.html

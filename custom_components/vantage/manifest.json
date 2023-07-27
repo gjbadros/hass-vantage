@@ -1,13 +1,9 @@
 {
   "domain": "vantage",
   "name": "Vantage",
-  "version": "0.5",
+  "version": "0.8",
   "documentation": "https://github.com/gjbadros/hass-vantage",
-  "requirements": [
-    "pyvantage==0.0.39",
-    "colormath==3.0.0",
-    "pympler==0.8"
-  ],
+  "requirements": ["pyvantage==0.0.54", "pympler==0.8"],
   "dependencies": [],
   "codeowners": []
 }
