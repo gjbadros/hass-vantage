@@ -75,8 +75,13 @@ class VantageFan(VantageDevice, FanEntity):
         """Flag supported features."""
         return SUPPORT_SET_SPEED
     
-    async def async_turn_on(self, **kwargs):
-        if ATTR_PERCENTAGE in kwargs:
+    async def async_turn_on(self, 
+                            percentage: int | None = None,
+                            preset_mode: str | None = None,
+                            **kwargs):
+        if percentage:
+            speed_percent = percentage
+        elif ATTR_PERCENTAGE in kwargs:
             speed_percent = kwargs[ATTR_PERCENTAGE]
         elif self._prev_speed == 0:
             speed_percent = 100
