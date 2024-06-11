@@ -411,7 +411,7 @@ class VantageDevice(Entity):
 
     def _update_callback(self, _device):
         """Run when invoked by pyvantage when the device state changes."""
-        self.async_schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def name(self):
