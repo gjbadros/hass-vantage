@@ -4,8 +4,8 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
     ATTR_PERCENTAGE,
-    SUPPORT_SET_SPEED,
     SERVICE_TURN_ON,
+    SERVICE_TURN_OFF,
     SERVICE_SET_PERCENTAGE
 )
 
@@ -43,6 +43,15 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         "async_turn_on",
     )
     platform.async_register_entity_service(
+        SERVICE_TURN_OFF,
+        {
+            vol.Optional(ATTR_PERCENTAGE): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
+        "async_turn_off",
+    )
+    platform.async_register_entity_service(
         SERVICE_SET_PERCENTAGE,
         {
             vol.Required(ATTR_PERCENTAGE): vol.All(
@@ -70,10 +79,10 @@ class VantageFan(VantageDevice, FanEntity):
         VantageDevice.__init__(self, area_name, vantage_device, controller)
     
         
-    @property
+    @cached_property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_SET_SPEED
+        return (FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF)
     
     async def async_turn_on(self, 
                             percentage: int | None = None,

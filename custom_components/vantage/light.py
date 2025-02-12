@@ -14,13 +14,10 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
     LIGHT_TURN_ON_SCHEMA,
-    DOMAIN,
     LightEntity,
+    LightEntityFeature,
+    ColorMode
 )
 
 from homeassistant.util.color import (
@@ -93,15 +90,25 @@ class VantageLight(VantageDevice, LightEntity):
         self._prev_brightness = None
         VantageDevice.__init__(self, area_name, vantage_device, controller)
 
-    @property
+    @cached_property
     def supported_features(self):
         """Flag supported features."""
         return (
-            SUPPORT_BRIGHTNESS
-            | SUPPORT_TRANSITION
-            | (SUPPORT_COLOR_TEMP if self._vantage_device.support_color_temp else 0)
-            | (SUPPORT_COLOR if self._vantage_device.support_color else 0)
+            LightEntityFeature.TRANSITION
+            # | SUPPORT_BRIGHTNESS
+            # | (SUPPORT_COLOR_TEMP if self._vantage_device.support_color_temp else 0)
+            # | (SUPPORT_COLOR if self._vantage_device.support_color else 0)
         )
+    
+    @cached_property
+    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
+        """Flag supported color modes."""
+        temp_set = {ColorMode.BRIGHTNESS}
+        if self._vantage_device.support_color_temp:
+            temp_set.add(ColorMode.COLOR_TEMP)
+        if self._vantage_device.support_color:
+            temp_set.add(ColorMode.SUPPORT_COLOR)
+        return temp_set
 
     @property
     def brightness(self):
