@@ -9,6 +9,8 @@ from homeassistant.components.fan import (
     SERVICE_SET_PERCENTAGE
 )
 
+from functools import cached_property
+
 import voluptuous as vol
 
 from homeassistant.helpers import entity_platform

@@ -408,7 +408,7 @@ class VantageDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._controller.subscribe, self._vantage_device, self._update_callback
         )
 

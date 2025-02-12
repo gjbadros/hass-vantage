@@ -6,6 +6,7 @@ https://home-assistant.io/components/light.vantage/
 """
 import logging
 import asyncio
+from functools import cached_property
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -111,6 +112,16 @@ class VantageLight(VantageDevice, LightEntity):
         return temp_set
 
     @property
+    def color_mode(self) -> ColorMode | None:
+        """Return the color mode."""
+        if self._vantage_device.support_color and self._vantage_device.rgb and self._vantage_device.rgb != [0,0,0]:
+            return ColorMode.SUPPORT_COLOR
+        if self._vantage_device.support_color_temp and self._vantage_device.color_temp and self._vantage_device.color_temp != 2700:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.BRIGHTNESS
+
+
+    @property
     def brightness(self):
         """Return the brightness of the light."""
         new_brightness = to_hass_level(self._vantage_device.last_level())
@@ -186,6 +197,7 @@ class VantageLight(VantageDevice, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             # TODO: is_dimmable test fails for GROUP load types
             # and self._vantage_device.is_dimmable:
+            
             brightness = kwargs[ATTR_BRIGHTNESS]
             self._set_level(brightness)
         if ATTR_RGB_COLOR in kwargs:
