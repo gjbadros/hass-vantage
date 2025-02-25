@@ -195,7 +195,7 @@ async def async_setup(hass, base_config):
 
     hass.data[VANTAGE_CONTROLLER] = None
     hass.data[VANTAGE_DEVICES] = {"light": [], "cover": [],
-                                  "sensor": [], "switch": []}
+                                  "sensor": [], "switch": [], "fan": []}
 
     config = base_config.get(DOMAIN)
     only_areas = config.get(CONF_ONLY_AREAS)
@@ -336,6 +336,9 @@ async def async_setup(hass, base_config):
         elif output.kind == "LIGHT":
             _LOGGER.debug("adding light %s to area=%s", output, area.name)
             hass.data[VANTAGE_DEVICES]["light"].append((area.name, output))
+        elif output.kind == "FAN":
+            _LOGGER.debug("adding fan %s to area=%s", output, area.name)
+            hass.data[VANTAGE_DEVICES]["fan"].append((area.name, output))            
         elif output.kind == "GROUP":
             _LOGGER.debug(
                 "adding group (of lights/relays) %s to area=%s",
@@ -378,7 +381,7 @@ async def async_setup(hass, base_config):
             if should_keep_for_area_vid(keypad.area) and not is_excluded_name(keypad):
                 hass.data[VANTAGE_DEVICES]["sensor"].append((None, keypad))
 
-    for component in ("light", "cover", "sensor", "switch"):
+    for component in ("light", "cover", "sensor", "switch","fan"):
         await discovery.async_load_platform(hass, component, DOMAIN, None, base_config)
 
     return True
@@ -405,7 +408,7 @@ class VantageDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._controller.subscribe, self._vantage_device, self._update_callback
         )
 
