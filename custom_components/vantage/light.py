@@ -10,8 +10,7 @@ from functools import cached_property
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
-    ATTR_KELVIN,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     ATTR_HS_COLOR,
@@ -209,20 +208,11 @@ class VantageLight(VantageDevice, LightEntity):
             # rgb = color_hs_to_RGB(*hs_color)
             # self._vantage_device.rgb = [*rgb]
             self._vantage_device.hs = hs_color
-        elif ATTR_COLOR_TEMP in kwargs or ATTR_KELVIN in kwargs:
-            if ATTR_KELVIN in kwargs:
-                _LOGGER.debug(
-                    "%s set via ATTR_KELVIN - %s", self, kwargs[ATTR_KELVIN]
-                )
-                kelvin = kwargs[ATTR_KELVIN]
-            else:
-                _LOGGER.debug(
-                    "%s set via ATTR_COLOR_TEMP - %s", self, kwargs[ATTR_COLOR_TEMP]
-                )
-                # Color temp in HA is in mireds:
-                # https://en.wikipedia.org/wiki/Mired
-                # M = 1000000/KELVIN_TEMP
-                kelvin = int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
+        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
+            _LOGGER.debug(
+                "%s set via ATTR_COLOR_TEMP_KELVIN - %s", self, kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
+            kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
             _LOGGER.debug("%s vantage color temp kelvin = %s", self, kelvin)
             if self._vantage_device._dmx_color:
                 # do conversion
