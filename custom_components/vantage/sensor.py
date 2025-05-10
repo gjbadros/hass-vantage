@@ -13,8 +13,8 @@ import logging
 # to use hass state to keep track of them between reboots
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from homeassistant.const import (
-    DEVICE_CLASS_ILLUMINANCE,
+from homeassistant.components.sensor.const import (
+    SensorDeviceClass,
 )
 from ..vantage import VantageDevice, VANTAGE_DEVICES, VANTAGE_CONTROLLER, button_pressed
 
@@ -59,7 +59,7 @@ class VantageSensor(VantageDevice, RestoreEntity):
             self._device_class = "power"
         if k == "lightsensor":
             self._unit_of_measurement = "lm"
-            self._device_class = DEVICE_CLASS_ILLUMINANCE
+            self._device_class = SensorDeviceClass.ILLUMINANCE
         _LOGGER.debug(
             "Created sensor (%s): %s", vantage_device.kind, vantage_device.name
         )
