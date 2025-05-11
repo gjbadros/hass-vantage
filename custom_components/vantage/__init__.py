@@ -366,7 +366,7 @@ async def async_setup(hass, base_config):
                 hass.data[VANTAGE_DEVICES]["sensor"].append((None, button))
         if (button.kind == "button" and not config.get(CONF_INCLUDE_BUTTONS)):
             if should_keep_for_area_vid(button.area) and not is_excluded_name(button):
-                hass.async_add_job(vc.subscribe, button, button_update_callback)
+                hass.async_add_executor_job(vc.subscribe, button, button_update_callback)
 
     for sensor in vc.sensors:
         if should_keep_for_area_vid(sensor.area) and not is_excluded_name(sensor):
@@ -405,7 +405,8 @@ class VantageDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_job(
+        # this was async_add_job, but see: https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/
+        self.hass.async_add_executor_job(
             self._controller.subscribe, self._vantage_device, self._update_callback
         )
 

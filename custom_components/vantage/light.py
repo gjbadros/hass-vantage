@@ -10,7 +10,7 @@ import asyncio
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    ATTR_KELVIN,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     ATTR_HS_COLOR,
@@ -190,12 +190,12 @@ class VantageLight(VantageDevice, LightEntity):
             # rgb = color_hs_to_RGB(*hs_color)
             # self._vantage_device.rgb = [*rgb]
             self._vantage_device.hs = hs_color
-        elif ATTR_COLOR_TEMP in kwargs or ATTR_KELVIN in kwargs:
-            if ATTR_KELVIN in kwargs:
+        elif ATTR_COLOR_TEMP in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs:
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
                 _LOGGER.debug(
-                    "%s set via ATTR_KELVIN - %s", self, kwargs[ATTR_KELVIN]
+                    "%s set via ATTR_COLOR_TEMP_KELVIN - %s", self, kwargs[ATTR_COLOR_TEMP_KELVIN]
                 )
-                kelvin = kwargs[ATTR_KELVIN]
+                kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
             else:
                 _LOGGER.debug(
                     "%s set via ATTR_COLOR_TEMP - %s", self, kwargs[ATTR_COLOR_TEMP]
@@ -214,13 +214,13 @@ class VantageLight(VantageDevice, LightEntity):
                 self._vantage_device.rgb = [*rgb]
             self._vantage_device.color_temp = kelvin
 
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         self._set_ramp(**kwargs)
         self._vantage_device.level = 0
-        self.async_write_ha_state()
+        self.self.schedule_update_ha_state()
 
     @property
     def is_on(self):
