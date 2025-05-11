@@ -9,18 +9,19 @@ import asyncio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    # ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
+    # SUPPORT_BRIGHTNESS,
+    # SUPPORT_COLOR,
+    # SUPPORT_COLOR_TEMP,
+    # SUPPORT_TRANSITION,
     LIGHT_TURN_ON_SCHEMA,
     DOMAIN,
     LightEntity,
+    ColorMode
 )
 
 from homeassistant.util.color import (
@@ -93,15 +94,15 @@ class VantageLight(VantageDevice, LightEntity):
         self._prev_brightness = None
         VantageDevice.__init__(self, area_name, vantage_device, controller)
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return (
-            SUPPORT_BRIGHTNESS
-            | SUPPORT_TRANSITION
-            | (SUPPORT_COLOR_TEMP if self._vantage_device.support_color_temp else 0)
-            | (SUPPORT_COLOR if self._vantage_device.support_color else 0)
-        )
+    # @property
+    # def supported_features(self):
+    #     """Flag supported features."""
+    #     return (
+    #         SUPPORT_BRIGHTNESS
+    #         | SUPPORT_TRANSITION
+    #         | (SUPPORT_COLOR_TEMP if self._vantage_device.support_color_temp else 0)
+    #         | (SUPPORT_COLOR if self._vantage_device.support_color else 0)
+    #     )
 
     @property
     def brightness(self):
@@ -116,6 +117,25 @@ class VantageLight(VantageDevice, LightEntity):
         """Return the color temperature of the light."""
         ct = self._vantage_device._color_temp
         return color_temperature_kelvin_to_mired(ct)
+
+    @property
+    def supported_color_modes(self):
+        """Return the set of supported color modes."""
+        if self._vantage_device.support_color:
+            return {ColorMode.RGBWW, ColorMode.RGBW, ColorMode.COLOR_TEMP}
+        if self._vantage_device.support_color_temp:
+            return {ColorMode.COLOR_TEMP}
+        return {ColorMode.BRIGHTNESS}
+        
+
+    @property
+    def color_mode(self):
+        """Return the color mode of the light.  See https://developers.home-assistant.io/docs/core/entity/light/#color-modes"""
+        if self._vantage_device.support_color:
+            return ColorMode.RGBWW
+        if self._vantage_device.support_color_temp:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.BRIGHTNESS
 
     @property
     def rgb_color(self):
@@ -190,20 +210,11 @@ class VantageLight(VantageDevice, LightEntity):
             # rgb = color_hs_to_RGB(*hs_color)
             # self._vantage_device.rgb = [*rgb]
             self._vantage_device.hs = hs_color
-        elif ATTR_COLOR_TEMP in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs:
-            if ATTR_COLOR_TEMP_KELVIN in kwargs:
-                _LOGGER.debug(
-                    "%s set via ATTR_COLOR_TEMP_KELVIN - %s", self, kwargs[ATTR_COLOR_TEMP_KELVIN]
-                )
-                kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
-            else:
-                _LOGGER.debug(
-                    "%s set via ATTR_COLOR_TEMP - %s", self, kwargs[ATTR_COLOR_TEMP]
-                )
-                # Color temp in HA is in mireds:
-                # https://en.wikipedia.org/wiki/Mired
-                # M = 1000000/KELVIN_TEMP
-                kelvin = int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
+        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
+            _LOGGER.debug(
+                "%s set via ATTR_COLOR_TEMP_KELVIN - %s", self, kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
+            kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
             _LOGGER.debug("%s vantage color temp kelvin = %s", self, kelvin)
             if self._vantage_device._dmx_color:
                 # do conversion
