@@ -231,7 +231,7 @@ class VantageLight(VantageDevice, LightEntity):
         """Turn the light off."""
         self._set_ramp(**kwargs)
         self._vantage_device.level = 0
-        self.self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self):
